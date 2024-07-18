@@ -24,35 +24,56 @@
         android:orientation="vertical"
         android:scrollbars="vertical">
 
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_gravity="center_horizontal"
+            android:id="@+id/reference_no1_layout"
+            android:gravity="center"
+            android:padding="10dp">
+
+
+            <ImageView
+                android:id="@+id/imageView_item_image"
+                android:layout_width="200dp"
+                android:layout_height="141dp"
+                android:src="@android:drawable/ic_menu_gallery" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/image_upload_btn"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_marginHorizontal="20px"
+                android:layout_marginTop="30px"
+                android:text="Upload Image"
+                app:backgroundTint="#1183f0" />
+
+        </LinearLayout>
+
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:layout_gravity="center_horizontal"
-            android:id="@+id/reference_no_layout"
             android:padding="10dp">
-<!--            <TextView-->
-<!--                android:layout_width="66dp"-->
-<!--                android:layout_height="wrap_content"-->
-<!--                android:text="No"-->
-<!--                android:textStyle="bold"-->
-<!--                android:textSize="20sp"/>-->
+
             <EditText
                 android:layout_width="match_parent"
                 android:layout_height="50dp"
-                android:hint="Reference No"
-                android:id="@+id/reference_no"
-                android:textAlignment="center"
+                android:id="@+id/reporter_name"
+                android:hint="Product Name"
                 android:background="@drawable/form_textbox"
                 android:drawablePadding="8dp"
-
+                android:drawableRight="@drawable/baseline_person_24"
                 android:padding="8dp"
                 android:textColor="@color/black"
                 android:textColorHighlight="@color/cardview_dark_background"
                 android:layout_marginTop="2dp"
                 />
         </LinearLayout>
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
@@ -64,49 +85,18 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="@drawable/custom_spinner_bg"
+
                 android:spinnerMode="dropdown" />
         </LinearLayout>
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="horizontal"
-            android:layout_gravity="center_horizontal"
-            android:padding="10dp">
-            <Spinner
-                android:id="@+id/property_type"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@drawable/custom_spinner_bg"
-                android:spinnerMode="dropdown" />
-        </LinearLayout>
+
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:layout_gravity="center_horizontal"
-            android:padding="10dp">
-<!--            <TextView-->
-<!--                android:layout_width="66dp"-->
-<!--                android:layout_height="wrap_content"-->
-<!--                android:text="Date"-->
-<!--                android:textStyle="bold"-->
-<!--                android:textSize="20sp"/>-->
-            <EditText
-                android:layout_width="match_parent"
-                android:layout_height="50dp"
-                android:id="@+id/date"
-                android:hint="Set Date"
-                android:background="@drawable/form_textbox"
-                android:drawablePadding="8dp"
-                android:drawableRight="@drawable/baseline_calendar_month_24"
-                android:padding="8dp"
-                android:textColor="@color/black"
-                android:textColorHighlight="@color/cardview_dark_background"
-                android:layout_marginTop="2dp"
-                />
-        </LinearLayout>
+            android:padding="10dp"/>
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -121,18 +111,17 @@
 <!--                android:textStyle="bold"-->
 <!--                android:textSize="20sp"/>-->
             <EditText
+                android:id="@+id/price"
                 android:layout_width="match_parent"
                 android:layout_height="50dp"
-                android:id="@+id/price"
-                android:hint="Price"
+                android:layout_marginTop="2dp"
                 android:background="@drawable/form_textbox"
-                android:drawablePadding="8dp"
                 android:drawableRight="@drawable/baseline_attach_money_24"
+                android:drawablePadding="8dp"
+                android:hint="Price"
                 android:padding="8dp"
                 android:textColor="@color/black"
-                android:textColorHighlight="@color/cardview_dark_background"
-                android:layout_marginTop="2dp"
-                />
+                android:textColorHighlight="@color/cardview_dark_background" />
         </LinearLayout>
 
         <LinearLayout
@@ -164,52 +153,19 @@
             android:orientation="horizontal"
             android:layout_gravity="center_horizontal"
             android:padding="10dp">
-<!--            <TextView-->
-<!--                android:layout_width="66dp"-->
-<!--                android:layout_height="wrap_content"-->
-<!--                android:text="remark"-->
-<!--                android:textStyle="bold"-->
-<!--                android:textSize="20sp"/>-->
-            <EditText
-                android:layout_width="match_parent"
-                android:layout_height="50dp"
-                android:id="@+id/remark"
-                android:hint="Remark"
-                android:background="@drawable/form_textbox"
-                android:drawablePadding="8dp"
-                android:drawableRight="@drawable/baseline_edit_24"
-                android:padding="8dp"
-                android:textColor="@color/black"
-                android:textColorHighlight="@color/cardview_dark_background"
-                android:layout_marginTop="2dp"
-                />
-        </LinearLayout>
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_gravity="center_horizontal"
-            android:padding="10dp">
-<!--            <TextView-->
-<!--                android:layout_width="66dp"-->
-<!--                android:layout_height="wrap_content"-->
-<!--                android:text="name"-->
-<!--                android:textStyle="bold"-->
-<!--                android:textSize="20sp"/>-->
             <EditText
+                android:id="@+id/remark"
                 android:layout_width="match_parent"
-                android:layout_height="50dp"
-                android:id="@+id/reporter_name"
-                android:hint="Name"
+                android:layout_height="75dp"
+                android:layout_marginTop="2dp"
                 android:background="@drawable/form_textbox"
+                android:drawableRight="@drawable/baseline_edit_24"
                 android:drawablePadding="8dp"
-                android:drawableRight="@drawable/baseline_person_24"
+                android:hint="Description"
                 android:padding="8dp"
                 android:textColor="@color/black"
-                android:textColorHighlight="@color/cardview_dark_background"
-                android:layout_marginTop="2dp"
-                />
+                android:textColorHighlight="@color/cardview_dark_background" />
         </LinearLayout>
         <LinearLayout
             android:layout_width="wrap_content"

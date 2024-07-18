@@ -78,17 +78,17 @@ public class Property_Form_Fragment extends Fragment {
         bedrooms_spinner.setAdapter(bedroom_adapter);
 
         dbContext=new DBContext(Property_Form_Fragment.this.getActivity());
-        ref_no_layout=form_view.findViewById(R.id.reference_no_layout);
-        ref_no=form_view.findViewById(R.id.reference_no);
+//        ref_no_layout=form_view.findViewById(R.id.reference_no_layout);
+//        ref_no=form_view.findViewById(R.id.reference_no);
         price=form_view.findViewById(R.id.price);
         remark=form_view.findViewById(R.id.remark);
         reporter=form_view.findViewById(R.id.reporter_name);
-        date_time_picker=form_view.findViewById(R.id.date);
+//        date_time_picker=form_view.findViewById(R.id.date);
         save_btn=form_view.findViewById(R.id.save_btn);
         delete_btn=form_view.findViewById(R.id.delete_btn);
 
         if(current_mode=="add_mode"){
-            ref_no_layout.setVisibility(View.INVISIBLE);
+//            ref_no_layout.setVisibility(View.INVISIBLE);
             save_btn.setText("Add");
             save_btn.setWidth(500);
             delete_btn.setVisibility(View.GONE);
@@ -96,9 +96,9 @@ public class Property_Form_Fragment extends Fragment {
         }
         if(current_mode=="detail_mode"){
 
-           reference_no=bundle.getString("ref_no");
-            ref_no.setText("Reference_No:"+reference_no);
-            ref_no.setEnabled(false);
+//           reference_no=bundle.getString("ref_no");
+//            ref_no.setText("Reference_No:"+reference_no);
+//            ref_no.setEnabled(false);
             property_list=dbContext.readProperty_by_ref_no(reference_no);
             PropertyModel p=property_list.get(0);
             String prop_type=p.getType().toString();
@@ -106,7 +106,7 @@ public class Property_Form_Fragment extends Fragment {
             String fur_type=p.getFurniture();
             property_type_spinner.setSelection(property_type_adapter.getPosition(prop_type));
             bedrooms_spinner.setSelection(bedroom_adapter.getPosition(bed_type));
-            date_time_picker.setText(property_list.get(0).getDate());
+//            date_time_picker.setText(property_list.get(0).getDate());
             price.setText(property_list.get(0).getPrice());
             furniture_type_spinner.setSelection(furniture_type_adapter.getPosition(fur_type));
             remark.setText(property_list.get(0).getRemark());
@@ -140,46 +140,46 @@ public class Property_Form_Fragment extends Fragment {
 //                datePickerDialog.show();
 //            }
 //        });
-        date_time_picker.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-//                SingleDateAndTimePickerDialog.Builder builder = new SingleDateAndTimePickerDialog.Builder(Property_Form_Fragment.this.getActivity())
-//                        .setTitle("Select Date and Time")
-//                        .setListener(new SingleDateAndTimePickerDialog.Listener() {
-//                            @Override
-//                            public void onDateSelected(Date date) {
-//                                // Handle the selected date and time
-//                                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault());
-//                                String formattedDateTime = sdf.format(date);
-//                                date_time_picker.setText(formattedDateTime);
-//                            }
-//                        });
-//
-//                SingleDateAndTimePickerDialog dialog = builder.build();
-//                dialog.display();
-//                SingleDateAndTimePickerDialog.Builder builder=new SingleDateAndTimePickerDialog.Builder(Property_Form_Fragment.this.getActivity())
-//                        .displayListener(new SingleDateAndTimePickerDialog.DisplayListener() {
-//                            @Override
-//                            public void onDisplayed(SingleDateAndTimePicker picker) {
-//                                // Retrieve the SingleDateAndTimePicker
-//                            }
-//
-//                            @Override
-//                            public void onClosed(SingleDateAndTimePicker picker) {
-//                                picker.getDate();
-//                            }
-//                        })
-//                        .title("Simple")
-//                        .listener(new SingleDateAndTimePickerDialog.Listener() {
-//                            @Override
-//                            public void onDateSelected(Date date) {
-//                                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault());
-//                                String formattedDateTime = sdf.format(date);
-//                                date_time_picker.setText(formattedDateTime);
-//                            }
-//                        }).display();
-            }
-        });
+//        date_time_picker.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+////                SingleDateAndTimePickerDialog.Builder builder = new SingleDateAndTimePickerDialog.Builder(Property_Form_Fragment.this.getActivity())
+////                        .setTitle("Select Date and Time")
+////                        .setListener(new SingleDateAndTimePickerDialog.Listener() {
+////                            @Override
+////                            public void onDateSelected(Date date) {
+////                                // Handle the selected date and time
+////                                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault());
+////                                String formattedDateTime = sdf.format(date);
+////                                date_time_picker.setText(formattedDateTime);
+////                            }
+////                        });
+////
+////                SingleDateAndTimePickerDialog dialog = builder.build();
+////                dialog.display();
+////                SingleDateAndTimePickerDialog.Builder builder=new SingleDateAndTimePickerDialog.Builder(Property_Form_Fragment.this.getActivity())
+////                        .displayListener(new SingleDateAndTimePickerDialog.DisplayListener() {
+////                            @Override
+////                            public void onDisplayed(SingleDateAndTimePicker picker) {
+////                                // Retrieve the SingleDateAndTimePicker
+////                            }
+////
+////                            @Override
+////                            public void onClosed(SingleDateAndTimePicker picker) {
+////                                picker.getDate();
+////                            }
+////                        })
+////                        .title("Simple")
+////                        .listener(new SingleDateAndTimePickerDialog.Listener() {
+////                            @Override
+////                            public void onDateSelected(Date date) {
+////                                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault());
+////                                String formattedDateTime = sdf.format(date);
+////                                date_time_picker.setText(formattedDateTime);
+////                            }
+////                        }).display();
+//            }
+//        });
 
         save_btn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -187,18 +187,18 @@ public class Property_Form_Fragment extends Fragment {
             if(current_mode=="add_mode"){
                 String prop_type=property_type_spinner.getSelectedItem().toString();
                 String bedroom=bedrooms_spinner.getSelectedItem().toString();
-                String add_date=date_time_picker.getText().toString();
+//                String add_date=date_time_picker.getText().toString();
                 String pr=price.getText().toString();
                 String fur_type=furniture_type_spinner.getSelectedItem().toString();
                 String rem=remark.getText().toString();
                 String rp_name=reporter.getText().toString();
 
-                if(prop_type.isEmpty() || bedroom.isEmpty() || add_date.isEmpty() || pr.isEmpty() || fur_type.isEmpty() || rem.isEmpty())
+                if(prop_type.isEmpty() || bedroom.isEmpty() ||  pr.isEmpty() || fur_type.isEmpty() || rem.isEmpty())
                 {
                     Toast.makeText(Property_Form_Fragment.this.getActivity(), "Enter all data", Toast.LENGTH_SHORT).show();
                 }
                 else {
-                        dbContext.addProperty(prop_type,bedroom,add_date,pr,fur_type,rem,rp_name);
+                        dbContext.addProperty(prop_type,bedroom,"",pr,fur_type,rem,rp_name);
                       //  Toast.makeText(Property_Form_Fragment.this.getActivity(), "New property added successfully", Toast.LENGTH_SHORT).show();
                     FragmentManager fragmentManager= getActivity().getSupportFragmentManager();
                     fragmentManager.popBackStack();
