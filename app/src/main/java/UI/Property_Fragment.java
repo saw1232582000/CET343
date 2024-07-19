@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import DB_Context.DBContext;
+import DB_Context.ItemModel;
 import DB_Context.PropertyModel;
 
 public class Property_Fragment extends Fragment implements PropertyClickListener {
@@ -39,7 +40,7 @@ public class Property_Fragment extends Fragment implements PropertyClickListener
     RecyclerView recyclerView;
     PropertyAdapter adapter;
     Button add_btn;
-    List<PropertyModel> property_list;
+    List<ItemModel> item_list;
     DBContext dbContext;
     String username="";
     String password="";
@@ -65,9 +66,9 @@ public class Property_Fragment extends Fragment implements PropertyClickListener
 
         search_text=property_view.findViewById(R.id.property_search);
         dbContext=new DBContext(Property_Fragment.this.getActivity());
-        property_list = new ArrayList<>();
-        property_list=dbContext.readProperty();
-        adapter=new PropertyAdapter(getContext(),property_list,this);
+        item_list = new ArrayList<>();
+        item_list=dbContext.search_items_by_name("");
+        adapter=new PropertyAdapter(getContext(), item_list,this);
         recyclerView.setAdapter(adapter);
 
        // FragmentManager fragmentManager=getSupportFragmentManager();
@@ -90,8 +91,8 @@ public class Property_Fragment extends Fragment implements PropertyClickListener
                 // This method is called when the text is changed.
                 // You can get the text using the `s` parameter.
                 String newText = s.toString();
-                property_list= dbContext.search_Property_by_ref_no(newText);
-                adapter=new PropertyAdapter(getContext(),property_list,Property_Fragment.this);
+                item_list= dbContext.search_items_by_name(newText);
+                adapter=new PropertyAdapter(getContext(),item_list,Property_Fragment.this);
                 recyclerView.setAdapter(adapter);
             }
 
@@ -122,10 +123,10 @@ public class Property_Fragment extends Fragment implements PropertyClickListener
     }
     @Override
     public void onItemClick(int position){
-        PropertyModel current_property=property_list.get(position);
-        int ref_no=current_property.getRef_no();
+        ItemModel current_property=item_list.get(position);
+        String item_id=current_property.getId();
         Bundle args=new Bundle();
-        args.putString("ref_no",Integer.toString(ref_no));
+        args.putString("ref_no",item_id);
         args.putString("mode", "detail_mode");
         args.putString("username",username);
         Property_Form_Fragment property_form_fragment=new Property_Form_Fragment();

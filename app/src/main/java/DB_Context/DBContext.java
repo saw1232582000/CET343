@@ -246,6 +246,26 @@ public class DBContext extends SQLiteOpenHelper {
         db.close();
         return property_modelArrayList;
     }
+    public ArrayList<ItemModel> search_items_by_name(String name){
+        SQLiteDatabase db=this.getReadableDatabase();
+        String selection = ITEM_NAME+" LIKE ?";
+        String[] selectionArgs = { "%" + name + "%" };
+        Cursor cursor = db.query(ITEM_TABLE, null, selection, selectionArgs, null, null, null);
+        ArrayList<ItemModel> property_modelArrayList=new ArrayList<>();
+
+        if(cursor.moveToFirst())
+        {
+            do{
+                property_modelArrayList.add(new ItemModel(cursor.getString(0),cursor.getString(1),
+                        cursor.getString(2),cursor.getString(3),
+                        cursor.getString(4),cursor.getString(5),
+                        cursor.getString(6)));
+
+            }while (cursor.moveToNext());
+        }
+        db.close();
+        return property_modelArrayList;
+    }
 
     //delete property form property table
     public void deleteProperty(String ref_no)

@@ -39,7 +39,7 @@ public class PropertyAdapter extends RecyclerView.Adapter<MyViewHolder> {
     @Override
     public void onBindViewHolder(@NonNull MyViewHolder holder, int position) {
 
-        //holder.property_title.setText("PN-"+dataList.get(position).getRef_no());
+        holder.property_title.setText(dataList.get(position).getItem_name());
 
     }
 
