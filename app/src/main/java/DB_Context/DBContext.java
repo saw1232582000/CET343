@@ -14,16 +14,17 @@ public class DBContext extends SQLiteOpenHelper {
     //declaring database name
     private static String DB_NAME="rentalU";
 
-    //declaring table name
+    /*---------------declaring table name----------------------------*/
     private static String USER_TABLE="user_table";
     private static String PROPERTY_TABLE="property_table";
+    private static String ITEM_TABLE="item_table";
 
-    //declaring column names for user_table
+    /*---------------declaring column names for user_table----------------------------*/
     private static String USER_ID="id";
     private static String USER_NAME="name";
     //private static String USER_EMAIL="email";
     private static String USER_PASSWORD="password";
-    //declaring column names for property_table
+    /*---------------declaring column names for property_table----------------------------*/
     private static String PROPERTY_REF_NO="ref_no";
     private static String PROPERTY_TYPE="property_type";
     private static String NO_OF_ROOMS="no_of_rooms";
@@ -33,8 +34,18 @@ public class DBContext extends SQLiteOpenHelper {
     private static String REMARK="remark";
     private static String REPORTER_NAME="reporter_name";
 
+    /*---------------declaring column names for item_table----------------------------*/
+    private static String ITEM_ID="item_id";
+    private static String ITEM_USERID="user_id";
+    private static String IMAGE_DATA="image_data";
+    private static String ITEM_NAME="name";
+    private static String ITEM_PRICE="price";
+    private static String ITEM_CATEGORY="category";
+    private static String ITEM_DESCRIPTION="description";
+
+
     public DBContext(Context context){
-        super(context,DB_NAME,null,1);
+        super(context,DB_NAME,null,2);
     }
 
     @Override
@@ -53,15 +64,39 @@ public class DBContext extends SQLiteOpenHelper {
                 DATE+" TEXT,"+PRICE+" TEXT,"+
                 FURNITURE_TYPE+" TEXT,"+REMARK+" TEXT,"+
                 REPORTER_NAME+" TEXT)";
-
         db.execSQL(property_create);
+
+        String item_create="CREATE TABLE "+ITEM_TABLE+"("+
+                ITEM_ID+" INTEGER PRIMARY KEY AUTOINCREMENT,"+
+                ITEM_USERID+" TEXT,"+
+                IMAGE_DATA+" TEXT,"+
+                ITEM_NAME+" TEXT,"+
+                ITEM_PRICE+" TEXT,"+
+                ITEM_DESCRIPTION+" TEXT,"+
+                ITEM_CATEGORY + " TEXT," +
+                "FOREIGN KEY(" + ITEM_ID + ") REFERENCES " + USER_TABLE + "(" + USER_ID + "))";
+
+        db.execSQL(item_create);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
 
-        db.execSQL("DROP TABLE IF EXISTS "+USER_TABLE);
-        db.execSQL("DROP TABLE IF EXISTS "+PROPERTY_TABLE);
+//        db.execSQL("DROP TABLE IF EXISTS "+USER_TABLE);
+//        db.execSQL("DROP TABLE IF EXISTS "+PROPERTY_TABLE);
+//        db.execSQL("DROP TABLE IF EXISTS "+ITEM_TABLE);
+
+            String item_create="CREATE TABLE "+ITEM_TABLE+"("+
+                    ITEM_ID+" INTEGER PRIMARY KEY AUTOINCREMENT,"+
+                    ITEM_USERID+" TEXT,"+
+                    IMAGE_DATA+" TEXT,"+
+                    ITEM_NAME+" TEXT,"+
+                    ITEM_PRICE+" TEXT,"+
+                    ITEM_DESCRIPTION+" TEXT,"+
+                    ITEM_CATEGORY + " TEXT," +
+                    "FOREIGN KEY(" + ITEM_ID + ") REFERENCES " + USER_TABLE + "(" + USER_ID + "))";
+            db.execSQL(item_create);
+
 
     }
 
@@ -99,21 +134,55 @@ public class DBContext extends SQLiteOpenHelper {
     }
 
     //adding a new property to property table
-    public void addProperty(String property_type,String no_of_rooms,String date,String rental_price,String type_of_furniture,String remark,String reporter)
+    public boolean addProperty(String property_type,String no_of_rooms,String date,String rental_price,String type_of_furniture,String remark,String reporter)
     {
         SQLiteDatabase database=this.getWritableDatabase();
-        ContentValues contentValues=new ContentValues();
+        try {
 
-        contentValues.put(PROPERTY_TYPE,property_type);
-        contentValues.put(NO_OF_ROOMS,no_of_rooms);
-        contentValues.put(DATE,date);
-        contentValues.put(PRICE,rental_price);
-        contentValues.put(FURNITURE_TYPE,type_of_furniture);
-        contentValues.put(REMARK,remark);
-        contentValues.put(REPORTER_NAME,reporter);
+            ContentValues contentValues=new ContentValues();
 
-        database.insert(PROPERTY_TABLE,null,contentValues);
-        database.close();
+            contentValues.put(PROPERTY_TYPE,property_type);
+            contentValues.put(NO_OF_ROOMS,no_of_rooms);
+            contentValues.put(DATE,date);
+            contentValues.put(PRICE,rental_price);
+            contentValues.put(FURNITURE_TYPE,type_of_furniture);
+            contentValues.put(REMARK,remark);
+            contentValues.put(REPORTER_NAME,reporter);
+
+            database.insert(PROPERTY_TABLE,null,contentValues);
+            database.close();
+            return true;
+        }catch (Error e){
+
+            if(database.isOpen()){
+                database.close();
+            }
+            return false;
+        }
+
+    }
+    public boolean addItem(String user_id,String image_data,String name,String price,String category,String description)
+    {
+        SQLiteDatabase database=this.getWritableDatabase();
+        try{
+
+            ContentValues contentValues=new ContentValues();
+            contentValues.put(ITEM_USERID,user_id);
+            contentValues.put(IMAGE_DATA,image_data);
+            contentValues.put(ITEM_NAME,name);
+            contentValues.put(ITEM_PRICE,price);
+            contentValues.put(ITEM_CATEGORY,category);
+            contentValues.put(ITEM_DESCRIPTION,description);
+            database.insert(ITEM_TABLE,null,contentValues);
+            database.close();
+            return true;
+        }catch (Error e){
+            if(database.isOpen()){
+                database.close();
+            }
+            return false;
+        }
+
     }
 
     //reading data from property

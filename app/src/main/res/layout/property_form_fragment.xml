@@ -62,7 +62,7 @@
             <EditText
                 android:layout_width="match_parent"
                 android:layout_height="50dp"
-                android:id="@+id/reporter_name"
+                android:id="@+id/item_name"
                 android:hint="Product Name"
                 android:background="@drawable/form_textbox"
                 android:drawablePadding="8dp"
@@ -81,7 +81,7 @@
             android:layout_gravity="center_horizontal"
             android:padding="10dp">
             <Spinner
-                android:id="@+id/bedroom"
+                android:id="@+id/item_category"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="@drawable/custom_spinner_bg"
@@ -139,12 +139,12 @@
 <!--                android:textSize="20sp"-->
 <!--                android:textStyle="bold" />-->
 
-            <Spinner
-                android:id="@+id/furniture_type"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@drawable/custom_spinner_bg"
-                android:spinnerMode="dropdown" />
+<!--            <Spinner-->
+<!--                android:id="@+id/furniture_type"-->
+<!--                android:layout_width="match_parent"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:background="@drawable/custom_spinner_bg"-->
+<!--                android:spinnerMode="dropdown" />-->
         </LinearLayout>
 
         <LinearLayout
@@ -155,7 +155,7 @@
             android:padding="10dp">
 
             <EditText
-                android:id="@+id/remark"
+                android:id="@+id/item_description"
                 android:layout_width="match_parent"
                 android:layout_height="75dp"
                 android:layout_marginTop="2dp"

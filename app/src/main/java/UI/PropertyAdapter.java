@@ -15,14 +15,15 @@ import com.example.assignment.R;
 
 import java.util.List;
 
+import DB_Context.ItemModel;
 import DB_Context.PropertyModel;
 
 public class PropertyAdapter extends RecyclerView.Adapter<MyViewHolder> {
     private Context context;
-    private List<PropertyModel> dataList;
+    private List<ItemModel> dataList;
     private PropertyClickListener propertyClickListener;
 
-    public PropertyAdapter(Context context, List<PropertyModel> dataList,PropertyClickListener propertyClickListener) {
+    public PropertyAdapter(Context context, List<ItemModel> dataList,PropertyClickListener propertyClickListener) {
         this.context = context;
         this.dataList = dataList;
         this.propertyClickListener=propertyClickListener;
@@ -38,7 +39,7 @@ public class PropertyAdapter extends RecyclerView.Adapter<MyViewHolder> {
     @Override
     public void onBindViewHolder(@NonNull MyViewHolder holder, int position) {
 
-        holder.property_title.setText("PN-"+dataList.get(position).getRef_no());
+        //holder.property_title.setText("PN-"+dataList.get(position).getRef_no());
 
     }
 
