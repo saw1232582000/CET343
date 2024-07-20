@@ -9,7 +9,9 @@ public class ItemModel {
     private String category;
     private String description;
 
-    public ItemModel(String id,String user_id, String image_data, String item_name, String price, String category, String description) {
+    private int is_purchased;
+
+    public ItemModel(String id, String user_id, String image_data, String item_name, String price, String category, String description, int is_purchased) {
         this.id = id;
         this.user_id=user_id;
         this.image_data = image_data;
@@ -17,6 +19,7 @@ public class ItemModel {
         this.price = price;
         this.category = category;
         this.description = description;
+        this.is_purchased = is_purchased;
     }
 
     public String getId() {
@@ -73,5 +76,13 @@ public class ItemModel {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public int getIs_purchased() {
+        return is_purchased;
+    }
+
+    public void setIs_purchased(int is_purchased) {
+        this.is_purchased = is_purchased;
     }
 }

@@ -22,6 +22,7 @@ import androidx.fragment.app.FragmentManager;
 
 import android.provider.MediaStore;
 import android.util.Base64;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -29,8 +30,12 @@ import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.RadioGroup;
 import android.widget.Spinner;
 import android.widget.Toast;
 
@@ -57,17 +62,18 @@ public class Property_Form_Fragment extends Fragment {
     EditText price;
 
     EditText description;
+    CheckBox is_purchased_checkbox;
 
+    LinearLayout is_purchased_checkbox_linearlayout;
     Button save_btn;
     Button image_upload_btn;
     ImageView item_image;
     Button delete_btn;
     public String current_mode;
     public String current_username;
-
     private String user_id;
-
     private String image_base64_string;
+     private int is_purchased;
     DBContext dbContext;
     View ref_no_layout;
     List<ItemModel> item_list;
@@ -127,7 +133,8 @@ public class Property_Form_Fragment extends Fragment {
         description=form_view.findViewById(R.id.item_description);
         image_upload_btn=form_view.findViewById(R.id.image_upload_btn);
         item_image=form_view.findViewById(R.id.imageView_item_image);
-
+        is_purchased_checkbox=form_view.findViewById(R.id.item_is_purchased);
+        is_purchased_checkbox_linearlayout=form_view.findViewById(R.id.item_is_purchased_layout);
         item_category.setAdapter(item_category_adapter);
 
         dbContext=new DBContext(Property_Form_Fragment.this.getActivity());
@@ -144,7 +151,9 @@ public class Property_Form_Fragment extends Fragment {
             save_btn.setText("Add");
             save_btn.setWidth(500);
             delete_btn.setVisibility(View.GONE);
-
+            is_purchased_checkbox.setVisibility(View.GONE);
+            is_purchased_checkbox_linearlayout.setMinimumHeight(0);
+            is_purchased_checkbox_linearlayout.setVisibility(View.GONE);
         }
         if(current_mode=="detail_mode"){
 
@@ -157,6 +166,16 @@ public class Property_Form_Fragment extends Fragment {
             String selected_item_price=i.getPrice();
             String selected_image_data=i.getImage_data();
             String selected_item_description=i.getDescription();
+
+            is_purchased=i.getIs_purchased();
+            if(i.getIs_purchased() == 1){
+                is_purchased_checkbox.setChecked(true);
+                Log.d("CheckboxState", "Checkbox set to true");
+            }
+            else {
+                is_purchased_checkbox.setChecked(false);
+                Log.d("CheckboxState", "Checkbox set to false");
+            }
             image_base64_string=selected_image_data;
             item_image.setImageBitmap(convertBase64ToBitmap(selected_image_data));
 
@@ -168,7 +187,20 @@ public class Property_Form_Fragment extends Fragment {
         }
 
 
-
+        is_purchased_checkbox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    // Checkbox is checked
+                    is_purchased=1;
+                    Toast.makeText(buttonView.getContext(), "Item is marked as purchased", Toast.LENGTH_SHORT).show();
+                } else {
+                    // Checkbox is unchecked
+                    is_purchased=0;
+                    Toast.makeText(buttonView.getContext(), "Item is not marked as purchased", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
 
 //
 
@@ -212,7 +244,9 @@ public class Property_Form_Fragment extends Fragment {
                 String current_description=description.getText().toString();
                 String current_category=item_category.getSelectedItem().toString();
                 String current_image_data=image_base64_string;
-                if(dbContext.updateItem(passed_item_id,current_image_data,current_item_name,current_price,current_category,current_description)) {
+                int current_is_purchased=is_purchased;
+                Log.d("is purchase", String.valueOf(current_is_purchased));
+                if(dbContext.updateItem(passed_item_id,current_image_data,current_item_name,current_price,current_category,current_description,current_is_purchased)) {
                     Toast.makeText(Property_Form_Fragment.this.getActivity(), "Item updated successfully", Toast.LENGTH_SHORT).show();
                 }
                 else{

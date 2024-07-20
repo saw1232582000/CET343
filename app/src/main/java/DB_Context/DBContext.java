@@ -43,6 +43,8 @@ public class DBContext extends SQLiteOpenHelper {
     private static String ITEM_CATEGORY="category";
     private static String ITEM_DESCRIPTION="description";
 
+    private static String ITEM_IS_PURCHASED="is_purchased";
+
 
     public DBContext(Context context){
         super(context,DB_NAME,null,2);
@@ -74,6 +76,7 @@ public class DBContext extends SQLiteOpenHelper {
                 ITEM_PRICE+" TEXT,"+
                 ITEM_DESCRIPTION+" TEXT,"+
                 ITEM_CATEGORY + " TEXT," +
+                ITEM_IS_PURCHASED + " INTEGER," +
                 "FOREIGN KEY(" + ITEM_ID + ") REFERENCES " + USER_TABLE + "(" + USER_ID + "))";
 
         db.execSQL(item_create);
@@ -94,6 +97,7 @@ public class DBContext extends SQLiteOpenHelper {
                     ITEM_PRICE+" TEXT,"+
                     ITEM_DESCRIPTION+" TEXT,"+
                     ITEM_CATEGORY + " TEXT," +
+                    ITEM_IS_PURCHASED + " INTEGER," +
                     "FOREIGN KEY(" + ITEM_ID + ") REFERENCES " + USER_TABLE + "(" + USER_ID + "))";
             db.execSQL(item_create);
 
@@ -173,6 +177,7 @@ public class DBContext extends SQLiteOpenHelper {
             contentValues.put(ITEM_PRICE,price);
             contentValues.put(ITEM_CATEGORY,category);
             contentValues.put(ITEM_DESCRIPTION,description);
+            contentValues.put(ITEM_IS_PURCHASED,0);
             database.insert(ITEM_TABLE,null,contentValues);
             database.close();
             return true;
@@ -239,7 +244,7 @@ public class DBContext extends SQLiteOpenHelper {
                 item_modelArrayList.add(new ItemModel(cursor.getString(0),cursor.getString(1),
                         cursor.getString(2),cursor.getString(3),
                         cursor.getString(4),cursor.getString(6),
-                        cursor.getString(5)));
+                        cursor.getString(5), cursor.getInt(7)));
 
             }while (cursor.moveToNext());
         }
@@ -279,7 +284,7 @@ public class DBContext extends SQLiteOpenHelper {
                 property_modelArrayList.add(new ItemModel(cursor.getString(0),cursor.getString(1),
                         cursor.getString(2),cursor.getString(3),
                         cursor.getString(4),cursor.getString(5),
-                        cursor.getString(6)));
+                        cursor.getString(6), cursor.getInt(5)));
 
             }while (cursor.moveToNext());
         }
@@ -312,7 +317,7 @@ public class DBContext extends SQLiteOpenHelper {
         db.update(PROPERTY_TABLE,contentValues,"ref_no=?",new String[]{original_ref_no});
 
     }
-    public boolean updateItem(String item_id,String image_data,String name,String price,String category,String description)
+    public boolean updateItem(String item_id,String image_data,String name,String price,String category,String description,int is_purchased)
     {
         SQLiteDatabase database=this.getWritableDatabase();
         try{
@@ -324,6 +329,7 @@ public class DBContext extends SQLiteOpenHelper {
             contentValues.put(ITEM_PRICE,price);
             contentValues.put(ITEM_CATEGORY,category);
             contentValues.put(ITEM_DESCRIPTION,description);
+            contentValues.put(ITEM_IS_PURCHASED,is_purchased);
             database.update(ITEM_TABLE,contentValues,"item_id=?",new String[]{item_id});
             database.close();
             return true;
