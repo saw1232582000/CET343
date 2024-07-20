@@ -3,6 +3,7 @@ package UI;
 import android.app.Activity;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
@@ -25,6 +26,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 
 import android.widget.EditText;
@@ -34,6 +36,7 @@ import android.widget.Toast;
 
 
 import com.example.assignment.R;
+import com.google.android.material.textfield.TextInputLayout;
 
 
 import java.io.ByteArrayOutputStream;
@@ -44,6 +47,7 @@ import java.util.List;
 import java.util.Locale;
 
 import DB_Context.DBContext;
+import DB_Context.ItemModel;
 import DB_Context.PropertyModel;
 
 
@@ -53,9 +57,6 @@ public class Property_Form_Fragment extends Fragment {
     EditText price;
 
     EditText description;
-    Spinner furniture_type_spinner;
-
-
 
     Button save_btn;
     Button image_upload_btn;
@@ -64,11 +65,13 @@ public class Property_Form_Fragment extends Fragment {
     public String current_mode;
     public String current_username;
 
+    private String user_id;
+
     private String image_base64_string;
     DBContext dbContext;
     View ref_no_layout;
-    List<PropertyModel> property_list;
-    String reference_no;
+    List<ItemModel> item_list;
+    String passed_item_id;
     int SELECT_PICTURE = 200;
     private ActivityResultLauncher<Intent> selectPictureLauncher;
 
@@ -106,6 +109,8 @@ public class Property_Form_Fragment extends Fragment {
             current_username= bundle.getString("username");
 
         }
+        SharedPreferences sharedPreferences = getActivity().getSharedPreferences("UserSession",Property_Form_Fragment.this.getActivity().MODE_PRIVATE);
+        user_id = sharedPreferences.getString("user_id", null);
 
         View form_view=inflater.inflate(R.layout.property_form_fragment, container, false);
         String[] item_categories = {"Select category", "cat 1"," cat 2","cat 3"};
@@ -123,7 +128,6 @@ public class Property_Form_Fragment extends Fragment {
         image_upload_btn=form_view.findViewById(R.id.image_upload_btn);
         item_image=form_view.findViewById(R.id.imageView_item_image);
 
-
         item_category.setAdapter(item_category_adapter);
 
         dbContext=new DBContext(Property_Form_Fragment.this.getActivity());
@@ -131,12 +135,12 @@ public class Property_Form_Fragment extends Fragment {
 
 
 
-//        date_time_picker=form_view.findViewById(R.id.date);
+
         save_btn=form_view.findViewById(R.id.save_btn);
         delete_btn=form_view.findViewById(R.id.delete_btn);
 
         if(current_mode=="add_mode"){
-//            ref_no_layout.setVisibility(View.INVISIBLE);
+
             save_btn.setText("Add");
             save_btn.setWidth(500);
             delete_btn.setVisibility(View.GONE);
@@ -144,29 +148,27 @@ public class Property_Form_Fragment extends Fragment {
         }
         if(current_mode=="detail_mode"){
 
-//           reference_no=bundle.getString("ref_no");
-//            ref_no.setText("Reference_No:"+reference_no);
-//            ref_no.setEnabled(false);
-            property_list=dbContext.readProperty_by_ref_no(reference_no);
-            PropertyModel p=property_list.get(0);
-            String prop_type=p.getType().toString();
-            String bed_type=p.getRooms();
-            String fur_type=p.getFurniture();
-           // String image_data=TODO:add image data here
 
-            //  TODO:set imageview with bitmap data
-           // item_image.setImageBitmap(convertBase64ToBitmap(image_data));
-//            property_type_spinner.setSelection(property_type_adapter.getPosition(prop_type));
-            item_category.setSelection(item_category_adapter.getPosition(bed_type));
-//            date_time_picker.setText(property_list.get(0).getDate());
-            price.setText(property_list.get(0).getPrice());
+            passed_item_id=bundle.getString("item_id");
+            item_list=dbContext.read_item_by_item_id(passed_item_id);
+            ItemModel i=item_list.get(0);
+            String selected_item_name=i.getItem_name();
+            String selected_item_category=i.getCategory();
+            String selected_item_price=i.getPrice();
+            String selected_image_data=i.getImage_data();
+            String selected_item_description=i.getDescription();
+            image_base64_string=selected_image_data;
+            item_image.setImageBitmap(convertBase64ToBitmap(selected_image_data));
 
-            description.setText(property_list.get(0).getRemark());
-            item_name.setText(property_list.get(0).getName());
+            item_name.setText(selected_item_name);
+            item_category.setSelection(item_category_adapter.getPosition(selected_item_category));
+            price.setText(selected_item_price);
+            description.setText(selected_item_description);
+
         }
 
-        item_name.setText(current_username);
-        final Calendar calendar=Calendar.getInstance();
+
+
 
 //
 
@@ -192,7 +194,7 @@ public class Property_Form_Fragment extends Fragment {
                     Toast.makeText(Property_Form_Fragment.this.getActivity(), "Enter all data", Toast.LENGTH_SHORT).show();
                 }
                 else {
-                       if(dbContext.addItem("",image_base64_string,it_name,pr,category,desc)) {
+                       if(dbContext.addItem(user_id,image_base64_string,it_name,pr,category,desc)) {
                            Toast.makeText(Property_Form_Fragment.this.getActivity(), "New item added successfully", Toast.LENGTH_SHORT).show();
                        }
                        else{
@@ -204,16 +206,21 @@ public class Property_Form_Fragment extends Fragment {
                 }
             }
             if(current_mode=="detail_mode"){
-//                String prop_type=property_type_spinner.getSelectedItem().toString();
-                String bedroom=item_category.getSelectedItem().toString();
 
-                String pr=price.getText().toString();
-                String fur_type=furniture_type_spinner.getSelectedItem().toString();
-                String rem=description.getText().toString();
-                String rp_name=item_name.getText().toString();
-                dbContext.updateProperty(reference_no,Integer.parseInt(reference_no) ,"",bedroom,"",pr,fur_type,rem,rp_name);
-                FragmentManager fragmentManager= getActivity().getSupportFragmentManager();
-                fragmentManager.popBackStack();
+                String current_item_name=item_name.getText().toString();
+                String current_price=price.getText().toString();
+                String current_description=description.getText().toString();
+                String current_category=item_category.getSelectedItem().toString();
+                String current_image_data=image_base64_string;
+                if(dbContext.updateItem(passed_item_id,current_image_data,current_item_name,current_price,current_category,current_description)) {
+                    Toast.makeText(Property_Form_Fragment.this.getActivity(), "Item updated successfully", Toast.LENGTH_SHORT).show();
+                }
+                else{
+                    Toast.makeText(Property_Form_Fragment.this.getActivity(), "Updating item fail!", Toast.LENGTH_SHORT).show();
+                }
+
+//                FragmentManager fragmentManager= getActivity().getSupportFragmentManager();
+//                fragmentManager.popBackStack();
             }
             }
         });
@@ -221,7 +228,7 @@ public class Property_Form_Fragment extends Fragment {
         delete_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-            dbContext.deleteProperty(reference_no);
+            dbContext.deleteProperty(passed_item_id);
             FragmentManager fragmentManager= getActivity().getSupportFragmentManager();
             fragmentManager.popBackStack();
             }

@@ -226,6 +226,26 @@ public class DBContext extends SQLiteOpenHelper {
         db.close();
         return property_modelArrayList;
     }
+    public ArrayList<ItemModel> read_item_by_item_id(String item_id){
+        SQLiteDatabase db=this.getReadableDatabase();
+        String selection = ITEM_ID+"=?";
+        String[] selectionArgs = { item_id };
+        Cursor cursor = db.query(ITEM_TABLE, null, selection, selectionArgs, null, null, null);
+        ArrayList<ItemModel> item_modelArrayList=new ArrayList<>();
+
+        if(cursor.moveToFirst())
+        {
+            do{
+                item_modelArrayList.add(new ItemModel(cursor.getString(0),cursor.getString(1),
+                        cursor.getString(2),cursor.getString(3),
+                        cursor.getString(4),cursor.getString(6),
+                        cursor.getString(5)));
+
+            }while (cursor.moveToNext());
+        }
+        db.close();
+        return item_modelArrayList;
+    }
     public ArrayList<PropertyModel> search_Property_by_ref_no(String ref_no){
         SQLiteDatabase db=this.getReadableDatabase();
         String selection = PROPERTY_REF_NO+" LIKE ?";
@@ -246,10 +266,10 @@ public class DBContext extends SQLiteOpenHelper {
         db.close();
         return property_modelArrayList;
     }
-    public ArrayList<ItemModel> search_items_by_name(String name){
+    public ArrayList<ItemModel> search_items_by_name(String name,String user_id){
         SQLiteDatabase db=this.getReadableDatabase();
-        String selection = ITEM_NAME+" LIKE ?";
-        String[] selectionArgs = { "%" + name + "%" };
+        String selection = ITEM_NAME+" LIKE ? AND "+ ITEM_USERID + " = ?";;
+        String[] selectionArgs = { "%" + name + "%" ,user_id};
         Cursor cursor = db.query(ITEM_TABLE, null, selection, selectionArgs, null, null, null);
         ArrayList<ItemModel> property_modelArrayList=new ArrayList<>();
 
@@ -290,6 +310,29 @@ public class DBContext extends SQLiteOpenHelper {
         contentValues.put(REPORTER_NAME,reporter);
 
         db.update(PROPERTY_TABLE,contentValues,"ref_no=?",new String[]{original_ref_no});
+
+    }
+    public boolean updateItem(String item_id,String image_data,String name,String price,String category,String description)
+    {
+        SQLiteDatabase database=this.getWritableDatabase();
+        try{
+
+            ContentValues contentValues=new ContentValues();
+//            contentValues.put(ITEM_USERID,user_id);
+            contentValues.put(IMAGE_DATA,image_data);
+            contentValues.put(ITEM_NAME,name);
+            contentValues.put(ITEM_PRICE,price);
+            contentValues.put(ITEM_CATEGORY,category);
+            contentValues.put(ITEM_DESCRIPTION,description);
+            database.update(ITEM_TABLE,contentValues,"item_id=?",new String[]{item_id});
+            database.close();
+            return true;
+        }catch (Error e){
+            if(database.isOpen()){
+                database.close();
+            }
+            return false;
+        }
 
     }
     public List<String> getTableList() {

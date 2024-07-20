@@ -7,6 +7,7 @@ import androidx.fragment.app.FragmentTransaction;
 import androidx.lifecycle.ViewModelProvider;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -45,14 +46,15 @@ public class Property_Fragment extends Fragment implements PropertyClickListener
     String username="";
     String password="";
     EditText search_text;
-
+    private String user_id;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
         View property_view=inflater.inflate(R.layout.fragment_property, container, false);
         Bundle bundle=getArguments();
-
+        SharedPreferences sharedPreferences = getActivity().getSharedPreferences("UserSession",Property_Fragment.this.getActivity().MODE_PRIVATE);
+        user_id = sharedPreferences.getString("user_id", null);
         if(bundle!=null)
         {
              username=bundle.getString("username");
@@ -67,7 +69,8 @@ public class Property_Fragment extends Fragment implements PropertyClickListener
         search_text=property_view.findViewById(R.id.property_search);
         dbContext=new DBContext(Property_Fragment.this.getActivity());
         item_list = new ArrayList<>();
-        item_list=dbContext.search_items_by_name("");
+
+        item_list=dbContext.search_items_by_name("",user_id);
         adapter=new PropertyAdapter(getContext(), item_list,this);
         recyclerView.setAdapter(adapter);
 
@@ -91,7 +94,7 @@ public class Property_Fragment extends Fragment implements PropertyClickListener
                 // This method is called when the text is changed.
                 // You can get the text using the `s` parameter.
                 String newText = s.toString();
-                item_list= dbContext.search_items_by_name(newText);
+                item_list= dbContext.search_items_by_name(newText,user_id);
                 adapter=new PropertyAdapter(getContext(),item_list,Property_Fragment.this);
                 recyclerView.setAdapter(adapter);
             }
@@ -126,7 +129,7 @@ public class Property_Fragment extends Fragment implements PropertyClickListener
         ItemModel current_property=item_list.get(position);
         String item_id=current_property.getId();
         Bundle args=new Bundle();
-        args.putString("ref_no",item_id);
+        args.putString("item_id",item_id);
         args.putString("mode", "detail_mode");
         args.putString("username",username);
         Property_Form_Fragment property_form_fragment=new Property_Form_Fragment();

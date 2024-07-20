@@ -1,6 +1,9 @@
 package UI;
 
+
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -69,6 +72,10 @@ public class dashboardActivity extends AppCompatActivity implements NavigationVi
              drawerLayout.closeDrawer(Gravity.LEFT);
              break;
          case R.id.nav_logout:
+             SharedPreferences sharedPreferences = dashboardActivity.this.getSharedPreferences("UserSession", Context.MODE_PRIVATE);
+             SharedPreferences.Editor editor = sharedPreferences.edit();
+             editor.clear(); // Clear all the stored data
+             editor.apply(); // Apply the changes
              Intent intent=new Intent(dashboardActivity.this, LoginActivity.class);
              startActivity(intent);
              break;
