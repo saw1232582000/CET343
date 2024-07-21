@@ -55,6 +55,7 @@ import java.util.Locale;
 import DB_Context.DBContext;
 import DB_Context.ItemModel;
 import DB_Context.PropertyModel;
+import SMSHelper.SMSHelper;
 
 
 public class Property_Form_Fragment extends Fragment {
@@ -69,12 +70,16 @@ public class Property_Form_Fragment extends Fragment {
     Button save_btn;
     Button image_upload_btn;
     ImageView item_image;
+    ImageView share_image;
+
     Button delete_btn;
     public String current_mode;
     public String current_username;
     private String user_id;
     private String image_base64_string;
      private int is_purchased;
+
+     private SMSHelper sms_service;
     DBContext dbContext;
     View ref_no_layout;
     List<ItemModel> item_list;
@@ -86,7 +91,7 @@ public class Property_Form_Fragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        sms_service=new SMSHelper(Property_Form_Fragment.this.getActivity());
         // Register the ActivityResultLauncher
         selectPictureLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
@@ -137,6 +142,7 @@ public class Property_Form_Fragment extends Fragment {
         is_purchased_checkbox=form_view.findViewById(R.id.item_is_purchased);
         is_purchased_checkbox_linearlayout=form_view.findViewById(R.id.item_is_purchased_layout);
         item_category.setAdapter(item_category_adapter);
+        share_image=form_view.findViewById(R.id.share_item);
 
         dbContext=new DBContext(Property_Form_Fragment.this.getActivity());
 
@@ -186,6 +192,14 @@ public class Property_Form_Fragment extends Fragment {
             description.setText(selected_item_description);
 
         }
+
+        share_image.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                shareItem();
+            }
+        });
+
 
 
         is_purchased_checkbox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -322,6 +336,43 @@ public class Property_Form_Fragment extends Fragment {
             e.printStackTrace();
             return null;
         }
+    }
+
+    private void shareItem(){
+        LayoutInflater inflater = LayoutInflater.from(getActivity());
+        View dialogView = inflater.inflate(R.layout.target_phone_number, null);
+        // Create the AlertDialog
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        builder.setView(dialogView)
+                .setTitle("Enter Phone Number To Share")
+                .setPositiveButton("Send", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        EditText editTextPhoneNumber = dialogView.findViewById(R.id.share_phone);
+                        String targetPhoneNumber = editTextPhoneNumber.getText().toString();
+
+                        if (!targetPhoneNumber.isEmpty()) {
+                            // Replace with actual item data
+                            String itemData = "Item name:"+item_name+"\n"+
+                                              "Item category:"+item_name+"\n"+
+                                              "Item price:"+item_name+"\n"+
+                                              "Item description:"+item_name+"\n";
+                            Log.d("Target Phone:", targetPhoneNumber);
+                            sms_service.sendSms(targetPhoneNumber,itemData);
+                        } else {
+                            Toast.makeText(getActivity(), "Phone number cannot be empty", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                })
+                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                });
+
+        // Show the dialog
+        builder.create().show();
     }
 
 
