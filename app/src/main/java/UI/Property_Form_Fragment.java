@@ -1,10 +1,12 @@
 package UI;
 
+import android.Manifest;
 import android.app.Activity;
 
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
@@ -15,6 +17,7 @@ import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AlertDialog;
+import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
@@ -55,8 +58,9 @@ import java.util.Locale;
 import DB_Context.DBContext;
 import DB_Context.ItemModel;
 import DB_Context.PropertyModel;
+import LocationHelper.LocationHelper;
 import SMSHelper.SMSHelper;
-
+import LocationHelper.MapActivityResultContract;
 
 public class Property_Form_Fragment extends Fragment {
     EditText item_name;
@@ -73,20 +77,23 @@ public class Property_Form_Fragment extends Fragment {
     ImageView share_image;
 
     Button delete_btn;
+    Button location_btn;
     public String current_mode;
     public String current_username;
     private String user_id;
     private String image_base64_string;
      private int is_purchased;
-
      private SMSHelper sms_service;
+    private LocationHelper locationHelper;
     DBContext dbContext;
     View ref_no_layout;
     List<ItemModel> item_list;
     String passed_item_id;
     int SELECT_PICTURE = 200;
     private ActivityResultLauncher<Intent> selectPictureLauncher;
-
+    private ActivityResultLauncher<Void> mapActivityResultLauncher;
+    private static final int REQUEST_MAP_LOCATION = 2;
+    private static final int REQUEST_LOCATION_PERMISSION = 1;
     DialogFragment dialogFragment = new DialogFragment();
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -110,6 +117,31 @@ public class Property_Form_Fragment extends Fragment {
                     }
                 }
         );
+
+        // Initialize the ActivityResultLauncher with the custom contract
+        mapActivityResultLauncher = registerForActivityResult(new MapActivityResultContract(),
+                new ActivityResultCallback<Intent>() {
+                    @Override
+                    public void onActivityResult(Intent result) {
+                        if (result != null) {
+                            double latitude = result.getDoubleExtra("latitude", 0);
+                            double longitude = result.getDoubleExtra("longitude", 0);
+                            String address = locationHelper.getAddressFromLocation(latitude, longitude);
+                            //TODO:set the location in textbox
+//                            locationTextView.setText(address);
+
+                            // Save latitude and longitude with your item data if needed
+                        }
+                    }
+                });
+
+        // Check permissions
+        if (ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                && ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, REQUEST_LOCATION_PERMISSION);
+        }
+
+
     }
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -143,7 +175,7 @@ public class Property_Form_Fragment extends Fragment {
         is_purchased_checkbox_linearlayout=form_view.findViewById(R.id.item_is_purchased_layout);
         item_category.setAdapter(item_category_adapter);
         share_image=form_view.findViewById(R.id.share_item);
-
+        location_btn=form_view.findViewById(R.id.location_btn);
         dbContext=new DBContext(Property_Form_Fragment.this.getActivity());
 
 
@@ -192,6 +224,13 @@ public class Property_Form_Fragment extends Fragment {
             description.setText(selected_item_description);
 
         }
+
+        location_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mapActivityResultLauncher.launch(null);
+            }
+        });
 
         share_image.setOnClickListener(new View.OnClickListener() {
             @Override

@@ -9,9 +9,12 @@ public class ItemModel {
     private String category;
     private String description;
 
+    private String latitude;
+    private String longitude;
+
     private int is_purchased;
 
-    public ItemModel(String id, String user_id, String image_data, String item_name, String price, String category, String description, int is_purchased) {
+    public ItemModel(String id, String user_id, String image_data, String item_name, String price, String category, String description, int is_purchased, String latitude, String longitude) {
         this.id = id;
         this.user_id=user_id;
         this.image_data = image_data;
@@ -19,6 +22,8 @@ public class ItemModel {
         this.price = price;
         this.category = category;
         this.description = description;
+        this.latitude = latitude;
+        this.longitude = longitude;
         this.is_purchased = is_purchased;
     }
 
@@ -84,5 +89,21 @@ public class ItemModel {
 
     public void setIs_purchased(int is_purchased) {
         this.is_purchased = is_purchased;
+    }
+
+    public String getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(String latitude) {
+        this.latitude = latitude;
+    }
+
+    public String getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(String longitude) {
+        this.longitude = longitude;
     }
 }
