@@ -299,6 +299,22 @@ public class DBContext extends SQLiteOpenHelper {
         db.delete(PROPERTY_TABLE,"ref_no=?",new String[]{ref_no});
         db.close();
     }
+    public boolean deleteItem(String item_id)
+    {
+        SQLiteDatabase db=this.getWritableDatabase();
+        try{
+
+            db.delete(ITEM_TABLE,"item_id=?",new String[]{item_id});
+            db.close();
+            return true;
+        }catch(Error e){
+            if(db.isOpen()){
+                db.close();
+            }
+            return false;
+        }
+
+    }
 
     public void updateProperty(String original_ref_no,int new_ref_no,String property_type,String no_of_rooms,String date,String rental_price,String type_of_furniture,String remark,String reporter)
     {

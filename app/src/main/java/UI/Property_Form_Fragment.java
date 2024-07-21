@@ -2,6 +2,7 @@ package UI;
 
 import android.app.Activity;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
@@ -262,9 +263,27 @@ public class Property_Form_Fragment extends Fragment {
         delete_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-            dbContext.deleteProperty(passed_item_id);
-            FragmentManager fragmentManager= getActivity().getSupportFragmentManager();
-            fragmentManager.popBackStack();
+                AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+                builder.setMessage("Are you sure you want to delete this item?");
+
+                builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        // Perform the action for "OK" button
+                        dbContext.deleteItem(passed_item_id);
+                        FragmentManager fragmentManager= getActivity().getSupportFragmentManager();
+                        fragmentManager.popBackStack();
+                    }
+                });
+                builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        // Dismiss the dialog
+                        dialog.dismiss();
+                    }
+                });
+                AlertDialog alertDialog = builder.create();
+                alertDialog.show();
             }
         });
 
