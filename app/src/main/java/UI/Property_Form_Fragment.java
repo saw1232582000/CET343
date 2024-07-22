@@ -81,7 +81,7 @@ public class Property_Form_Fragment extends Fragment {
     public String current_mode;
     public String current_username;
     private String user_id;
-    private String image_base64_string;
+    private String image_base64_string="";
      private int is_purchased;
      private SMSHelper sms_service;
     private LocationHelper locationHelper;
@@ -216,6 +216,7 @@ public class Property_Form_Fragment extends Fragment {
                 Log.d("CheckboxState", "Checkbox set to false");
             }
             image_base64_string=selected_image_data;
+            if(image_base64_string.length() > 1)
             item_image.setImageBitmap(convertBase64ToBitmap(selected_image_data));
 
             item_name.setText(selected_item_name);
@@ -392,10 +393,10 @@ public class Property_Form_Fragment extends Fragment {
 
                         if (!targetPhoneNumber.isEmpty()) {
                             // Replace with actual item data
-                            String itemData = "Item name:"+item_name+"\n"+
-                                              "Item category:"+item_name+"\n"+
-                                              "Item price:"+item_name+"\n"+
-                                              "Item description:"+item_name+"\n";
+                            String itemData = "Item name:"+item_name.getText()+"\n"+
+                                              "Item category:"+item_category.getSelectedItem().toString()+"\n"+
+                                              "Item price:"+price.getText()+"\n"+
+                                              "Item description:"+description.getText()+"\n";
                             Log.d("Target Phone:", targetPhoneNumber);
                             sms_service.sendSms(targetPhoneNumber,itemData);
                         } else {
