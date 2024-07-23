@@ -240,7 +240,7 @@
                 android:layout_height="match_parent"
                 app:backgroundTint="#de692f"
                 android:id="@+id/location_btn"
-                android:text="Set location"
+                android:text="Show location"
                 android:layout_marginTop="5px"
                 android:layout_marginHorizontal="20px"/>
         </LinearLayout>

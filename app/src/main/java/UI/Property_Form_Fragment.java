@@ -22,9 +22,10 @@ import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 
 
-
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Base64;
 import android.util.Log;
@@ -51,8 +52,12 @@ import com.mapbox.mapboxsdk.maps.MapboxMap;
 
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 
 
@@ -60,9 +65,9 @@ import DB_Context.DBContext;
 import DB_Context.ItemModel;
 
 import LoactionHandlerWIthMapBox.LocationHandlerWithMapBox;
-import LocationHelper.LocationHelper;
+
 import SMSHelper.SMSHelper;
-import LocationHelper.MapActivityResultContract;
+
 
 public class Property_Form_Fragment extends Fragment {
     EditText item_name;
@@ -78,8 +83,8 @@ public class Property_Form_Fragment extends Fragment {
     ImageView item_image;
     ImageView share_image;
 
-    String current_latitude;
-    String current_longitude;
+    String current_latitude="";
+    String current_longitude="";
 
     Button delete_btn;
     Button location_btn;
@@ -87,6 +92,7 @@ public class Property_Form_Fragment extends Fragment {
     public String current_username;
     private String user_id;
     private String image_base64_string="";
+    private Uri cameraImageUri;
      private int is_purchased;
      private SMSHelper sms_service;
 
@@ -94,14 +100,14 @@ public class Property_Form_Fragment extends Fragment {
      private MapboxMap mapboxMap;
      private LocationHandlerWithMapBox locationHandlerWithMapBox;
      private boolean isLocationSelected=false;
-    private LocationHelper locationHelper;
+
     DBContext dbContext;
     View ref_no_layout;
     List<ItemModel> item_list;
     String passed_item_id;
     int SELECT_PICTURE = 200;
     private ActivityResultLauncher<Intent> selectPictureLauncher;
-    private ActivityResultLauncher<Void> mapActivityResultLauncher;
+//    private ActivityResultLauncher<Void> mapActivityResultLauncher;
     private static final int REQUEST_MAP_LOCATION = 2;
     private static final int REQUEST_LOCATION_PERMISSION = 1;
     DialogFragment dialogFragment = new DialogFragment();
@@ -117,12 +123,32 @@ public class Property_Form_Fragment extends Fragment {
                     public void onActivityResult(ActivityResult result) {
                         if (result.getResultCode() == Activity.RESULT_OK) {
                             Intent data = result.getData();
+                            Uri selectedImageUri=null;
+
                             if (data != null) {
-                                Uri selectedImageUri = data.getData();
-                                // Set the image to the ImageView
-                                item_image.setImageURI(selectedImageUri);
-                                image_base64_string = convertImageToBase64(selectedImageUri);
+                                selectedImageUri = data.getData();
+                                if(selectedImageUri == null){
+                                    Bitmap photo = (Bitmap) data.getExtras().get("data");
+                                    item_image.setImageBitmap(photo);
+                                    image_base64_string=bitmapToBase64(photo);
+                                }
+                                else{
+                                    // Set the image to the ImageView
+                                    item_image.setImageURI(selectedImageUri);
+                                    image_base64_string = convertImageToBase64(selectedImageUri);
+                                }
+
                             }
+//                            if (data != null) {
+//                                selectedImageUri = data.getData();
+//                            }
+//                            if (selectedImageUri == null && cameraImageUri != null) {
+//                                selectedImageUri = cameraImageUri;
+//                            }
+//                            if (selectedImageUri != null) {
+//                                item_image.setImageURI(selectedImageUri);
+//                                image_base64_string = convertImageToBase64(selectedImageUri);
+//                            }
                         }
                     }
                 }
@@ -131,21 +157,21 @@ public class Property_Form_Fragment extends Fragment {
 
 
         // Initialize the ActivityResultLauncher with the custom contract
-        mapActivityResultLauncher = registerForActivityResult(new MapActivityResultContract(),
-                new ActivityResultCallback<Intent>() {
-                    @Override
-                    public void onActivityResult(Intent result) {
-                        if (result != null) {
-                            double latitude = result.getDoubleExtra("latitude", 0);
-                            double longitude = result.getDoubleExtra("longitude", 0);
-                            String address = locationHelper.getAddressFromLocation(latitude, longitude);
-                            //TODO:set the location in textbox
-//                            locationTextView.setText(address);
-
-                            // Save latitude and longitude with your item data if needed
-                        }
-                    }
-                });
+//        mapActivityResultLauncher = registerForActivityResult(new MapActivityResultContract(),
+//                new ActivityResultCallback<Intent>() {
+//                    @Override
+//                    public void onActivityResult(Intent result) {
+//                        if (result != null) {
+//                            double latitude = result.getDoubleExtra("latitude", 0);
+//                            double longitude = result.getDoubleExtra("longitude", 0);
+//
+//                            //TODO:set the location in textbox
+////                            locationTextView.setText(address);
+//
+//                            // Save latitude and longitude with your item data if needed
+//                        }
+//                    }
+//                });
 
         // Check permissions
         if (ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
@@ -205,6 +231,7 @@ public class Property_Form_Fragment extends Fragment {
             is_purchased_checkbox.setVisibility(View.GONE);
             is_purchased_checkbox_linearlayout.setMinimumHeight(0);
             is_purchased_checkbox_linearlayout.setVisibility(View.GONE);
+            location_btn.setVisibility(View.GONE);
         }
         if(current_mode=="detail_mode"){
 
@@ -237,13 +264,14 @@ public class Property_Form_Fragment extends Fragment {
             item_category.setSelection(item_category_adapter.getPosition(selected_item_category));
             price.setText(selected_item_price);
             description.setText(selected_item_description);
-
+            current_latitude=i.getLatitude();
+            current_longitude=i.getLongitude();
         }
 
         location_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mapActivityResultLauncher.launch(null);
+                openMapFragment(Float.valueOf(current_latitude), Float.valueOf(current_longitude));
             }
         });
 
@@ -277,8 +305,13 @@ public class Property_Form_Fragment extends Fragment {
         save_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                getCurrentLocation();
-
+                if(current_mode=="add_mode"){
+                    getCurrentLocation();
+                }
+                if(current_mode=="detail_mode"){
+                    addData();
+                }
+//            addData();
             }
         });
 
@@ -313,9 +346,14 @@ public class Property_Form_Fragment extends Fragment {
             @Override
             public void onClick(View view) {
                 // Create an intent to pick an image
-                Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                Intent galleryIntent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                // Create an array of intents to choose from
+                Intent chooserIntent = Intent.createChooser(galleryIntent, "Select Picture");
+                chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, new Intent[]{cameraIntent});
                 // Launch the intent using the ActivityResultLauncher
-                selectPictureLauncher.launch(Intent.createChooser(intent, "Select Picture"));
+                selectPictureLauncher.launch(chooserIntent);
+
             }
         });
 
@@ -415,7 +453,7 @@ public class Property_Form_Fragment extends Fragment {
                 Toast.makeText(Property_Form_Fragment.this.getActivity(), "Enter all data", Toast.LENGTH_SHORT).show();
             }
             else {
-                if(dbContext.addItem(user_id,image_base64_string,it_name,pr,category,desc)) {
+                if(dbContext.addItem(user_id,image_base64_string,it_name,pr,category,desc,current_latitude,current_longitude)) {
                     Toast.makeText(Property_Form_Fragment.this.getActivity(), "New item added successfully", Toast.LENGTH_SHORT).show();
                 }
                 else{
@@ -445,6 +483,19 @@ public class Property_Form_Fragment extends Fragment {
 //                FragmentManager fragmentManager= getActivity().getSupportFragmentManager();
 //                fragmentManager.popBackStack();
         }
+    }
+    public String bitmapToBase64(Bitmap bitmap){
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream);
+        byte[] byteArray = byteArrayOutputStream.toByteArray();
+        return Base64.encodeToString(byteArray, Base64.DEFAULT);
+    }
+    private void openMapFragment(double latitude, double longitude) {
+        FragmentTransaction transaction = getActivity().getSupportFragmentManager().beginTransaction();
+        MapboxFragment mapboxFragment = MapboxFragment.newInstance(latitude, longitude);
+        transaction.replace(R.id.fragment_container, mapboxFragment);
+        transaction.addToBackStack(null);
+        transaction.commit();
     }
 
 }
