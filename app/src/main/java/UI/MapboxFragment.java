@@ -16,6 +16,9 @@ import com.mapbox.mapboxsdk.maps.MapView;
 import com.mapbox.mapboxsdk.maps.MapboxMap;
 import com.mapbox.mapboxsdk.maps.OnMapReadyCallback;
 import com.mapbox.mapboxsdk.maps.Style;
+import com.mapbox.mapboxsdk.plugins.annotation.Symbol;
+import com.mapbox.mapboxsdk.plugins.annotation.SymbolManager;
+import com.mapbox.mapboxsdk.plugins.annotation.SymbolOptions;
 
 
 public class MapboxFragment extends Fragment {
@@ -27,7 +30,7 @@ public class MapboxFragment extends Fragment {
 
     private MapView mapView;
     private MapboxMap mapboxMap;
-
+    private SymbolManager symbolManager;
     public MapboxFragment() {
         // Required empty public constructor
     }
@@ -60,13 +63,23 @@ public class MapboxFragment extends Fragment {
             @Override
             public void onMapReady(@NonNull MapboxMap mapboxMap) {
                 MapboxFragment.this.mapboxMap = mapboxMap;
-                Log.d("latitude,longitude:", String.valueOf(latitude)+","+String.valueOf(longitude));
+                Log.d("latitude,longitude:", String.valueOf(latitude) + "," + String.valueOf(longitude));
                 LatLng initialLocation = new LatLng(latitude, longitude);
-//                mapboxMap.animateCamera(CameraUpdateFactory.newLatLngZoom(initialLocation, 12.0));
                 mapboxMap.setStyle(Style.MAPBOX_STREETS, new Style.OnStyleLoaded() {
                     @Override
                     public void onStyleLoaded(@NonNull Style style) {
                         mapboxMap.animateCamera(CameraUpdateFactory.newLatLngZoom(initialLocation, 16.0));
+                        // Create a SymbolManager
+                        symbolManager = new SymbolManager(mapView, mapboxMap, style);
+                        symbolManager.setIconAllowOverlap(true);
+                        symbolManager.setIconIgnorePlacement(true);
+
+                        // Add a symbol at the initial location
+                        SymbolOptions symbolOptions = new SymbolOptions()
+                                .withLatLng(initialLocation)
+                                .withIconImage("marker-15")
+                                .withIconSize(4.0f);
+                        Symbol symbol = symbolManager.create(symbolOptions);
                     }
                 });
             }
