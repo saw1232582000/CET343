@@ -9,6 +9,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
 
@@ -31,7 +32,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.AutoCompleteTextView;
+
 import android.widget.Button;
 
 import android.widget.CheckBox;
@@ -39,25 +40,26 @@ import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.RadioGroup;
+
 import android.widget.Spinner;
 import android.widget.Toast;
 
 
 import com.example.assignment.R;
-import com.google.android.material.textfield.TextInputLayout;
+import com.mapbox.mapboxsdk.maps.MapView;
+import com.mapbox.mapboxsdk.maps.MapboxMap;
 
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
-import java.util.Calendar;
-import java.util.Date;
+
 import java.util.List;
-import java.util.Locale;
+
 
 import DB_Context.DBContext;
 import DB_Context.ItemModel;
-import DB_Context.PropertyModel;
+
+import LoactionHandlerWIthMapBox.LocationHandlerWithMapBox;
 import LocationHelper.LocationHelper;
 import SMSHelper.SMSHelper;
 import LocationHelper.MapActivityResultContract;
@@ -76,6 +78,9 @@ public class Property_Form_Fragment extends Fragment {
     ImageView item_image;
     ImageView share_image;
 
+    String current_latitude;
+    String current_longitude;
+
     Button delete_btn;
     Button location_btn;
     public String current_mode;
@@ -84,6 +89,11 @@ public class Property_Form_Fragment extends Fragment {
     private String image_base64_string="";
      private int is_purchased;
      private SMSHelper sms_service;
+
+     private MapView mapView;
+     private MapboxMap mapboxMap;
+     private LocationHandlerWithMapBox locationHandlerWithMapBox;
+     private boolean isLocationSelected=false;
     private LocationHelper locationHelper;
     DBContext dbContext;
     View ref_no_layout;
@@ -117,6 +127,8 @@ public class Property_Form_Fragment extends Fragment {
                     }
                 }
         );
+
+
 
         // Initialize the ActivityResultLauncher with the custom contract
         mapActivityResultLauncher = registerForActivityResult(new MapActivityResultContract(),
@@ -216,8 +228,10 @@ public class Property_Form_Fragment extends Fragment {
                 Log.d("CheckboxState", "Checkbox set to false");
             }
             image_base64_string=selected_image_data;
-            if(image_base64_string.length() > 1)
+
             item_image.setImageBitmap(convertBase64ToBitmap(selected_image_data));
+
+
 
             item_name.setText(selected_item_name);
             item_category.setSelection(item_category_adapter.getPosition(selected_item_category));
@@ -247,6 +261,7 @@ public class Property_Form_Fragment extends Fragment {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if (isChecked) {
                     // Checkbox is checked
+                    // Checkbox is checked
                     is_purchased=1;
                     Toast.makeText(buttonView.getContext(), "Item is marked as purchased", Toast.LENGTH_SHORT).show();
                 } else {
@@ -262,55 +277,8 @@ public class Property_Form_Fragment extends Fragment {
         save_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-            if(current_mode=="add_mode"){
-                String it_name=item_name.getText().toString();
-                String category=item_category.getSelectedItem().toString();
-                String pr=price.getText().toString();
-                String desc=description.getText().toString();
-                String message2=image_base64_string;
-                String message="item name:"+it_name+"\n"+
-                        "item name:"+category+"\n"+
-                        "item name:"+pr+"\n"+
-                        "item name:"+desc+"\n";
-                AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-                builder.setMessage(message2);
-                AlertDialog alertDialog = builder.create();
-//                alertDialog.show();
-                if( category.isEmpty() ||  pr.isEmpty() ||  it_name.isEmpty())
-                {
-                    Toast.makeText(Property_Form_Fragment.this.getActivity(), "Enter all data", Toast.LENGTH_SHORT).show();
-                }
-                else {
-                       if(dbContext.addItem(user_id,image_base64_string,it_name,pr,category,desc)) {
-                           Toast.makeText(Property_Form_Fragment.this.getActivity(), "New item added successfully", Toast.LENGTH_SHORT).show();
-                       }
-                       else{
-                           Toast.makeText(Property_Form_Fragment.this.getActivity(), "Item Creation Fail!", Toast.LENGTH_SHORT).show();
-                       }
+                getCurrentLocation();
 
-//                    FragmentManager fragmentManager= getActivity().getSupportFragmentManager();
-//                    fragmentManager.popBackStack();
-                }
-            }
-            if(current_mode=="detail_mode"){
-
-                String current_item_name=item_name.getText().toString();
-                String current_price=price.getText().toString();
-                String current_description=description.getText().toString();
-                String current_category=item_category.getSelectedItem().toString();
-                String current_image_data=image_base64_string;
-                int current_is_purchased=is_purchased;
-                Log.d("is purchase", String.valueOf(current_is_purchased));
-                if(dbContext.updateItem(passed_item_id,current_image_data,current_item_name,current_price,current_category,current_description,current_is_purchased)) {
-                    Toast.makeText(Property_Form_Fragment.this.getActivity(), "Item updated successfully", Toast.LENGTH_SHORT).show();
-                }
-                else{
-                    Toast.makeText(Property_Form_Fragment.this.getActivity(), "Updating item fail!", Toast.LENGTH_SHORT).show();
-                }
-
-//                FragmentManager fragmentManager= getActivity().getSupportFragmentManager();
-//                fragmentManager.popBackStack();
-            }
             }
         });
 
@@ -415,5 +383,68 @@ public class Property_Form_Fragment extends Fragment {
         builder.create().show();
     }
 
+    private void getCurrentLocation(){
+        locationHandlerWithMapBox = new LocationHandlerWithMapBox(Property_Form_Fragment.this.getActivity());
+        locationHandlerWithMapBox.setLocationCallback(new LocationHandlerWithMapBox.LocationCallback() {
+            @Override
+            public void onLocationResult(Location location) {
+                current_latitude = String.valueOf(location.getLatitude());
+                 current_longitude = String.valueOf(location.getLongitude());
+                Toast.makeText(Property_Form_Fragment.this.getActivity(), "Current location: " + current_latitude + ", " + current_longitude, Toast.LENGTH_LONG).show();
+                Log.d("Image data", "Current location: " + current_latitude + ", " + current_longitude);
+                locationHandlerWithMapBox.removeLocationUpdates();
+                addData();
+            }
+
+            @Override
+            public void onLocationError(Exception exception) {
+                Toast.makeText(Property_Form_Fragment.this.getActivity(), "Error getting location: " + exception.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
+    private void addData(){
+        if(current_mode=="add_mode"){
+            String it_name=item_name.getText().toString();
+            String category=item_category.getSelectedItem().toString();
+            String pr=price.getText().toString();
+            String desc=description.getText().toString();
+
+            if( category.isEmpty() ||  pr.isEmpty() ||  it_name.isEmpty())
+            {
+                Toast.makeText(Property_Form_Fragment.this.getActivity(), "Enter all data", Toast.LENGTH_SHORT).show();
+            }
+            else {
+                if(dbContext.addItem(user_id,image_base64_string,it_name,pr,category,desc)) {
+                    Toast.makeText(Property_Form_Fragment.this.getActivity(), "New item added successfully", Toast.LENGTH_SHORT).show();
+                }
+                else{
+                    Toast.makeText(Property_Form_Fragment.this.getActivity(), "Item Creation Fail!", Toast.LENGTH_SHORT).show();
+                }
+
+//                    FragmentManager fragmentManager= getActivity().getSupportFragmentManager();
+//                    fragmentManager.popBackStack();
+            }
+        }
+        if(current_mode=="detail_mode"){
+
+            String current_item_name=item_name.getText().toString();
+            String current_price=price.getText().toString();
+            String current_description=description.getText().toString();
+            String current_category=item_category.getSelectedItem().toString();
+            String current_image_data=image_base64_string;
+            int current_is_purchased=is_purchased;
+            Log.d("Image data", current_image_data);
+            if(dbContext.updateItem(passed_item_id,current_image_data,current_item_name,current_price,current_category,current_description,current_is_purchased)) {
+                Toast.makeText(Property_Form_Fragment.this.getActivity(), "Item updated successfully", Toast.LENGTH_SHORT).show();
+            }
+            else{
+                Toast.makeText(Property_Form_Fragment.this.getActivity(), "Updating item fail!", Toast.LENGTH_SHORT).show();
+            }
+
+//                FragmentManager fragmentManager= getActivity().getSupportFragmentManager();
+//                fragmentManager.popBackStack();
+        }
+    }
 
 }

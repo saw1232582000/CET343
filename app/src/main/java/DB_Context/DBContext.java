@@ -5,6 +5,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Base64;
 import android.util.Log;
 
 import java.util.ArrayList;
@@ -73,7 +74,7 @@ public class DBContext extends SQLiteOpenHelper {
         String item_create="CREATE TABLE "+ITEM_TABLE+"("+
                 ITEM_ID+" INTEGER PRIMARY KEY AUTOINCREMENT,"+
                 ITEM_USERID+" TEXT,"+
-                IMAGE_DATA+" TEXT,"+
+                IMAGE_DATA+" BLOB,"+
                 ITEM_NAME+" TEXT,"+
                 ITEM_PRICE+" TEXT,"+
                 ITEM_DESCRIPTION+" TEXT,"+
@@ -175,10 +176,10 @@ public class DBContext extends SQLiteOpenHelper {
     {
         SQLiteDatabase database=this.getWritableDatabase();
         try{
-
+            byte[] imageData = Base64.decode(image_data, Base64.DEFAULT);
             ContentValues contentValues=new ContentValues();
             contentValues.put(ITEM_USERID,user_id);
-            contentValues.put(IMAGE_DATA,image_data);
+            contentValues.put(IMAGE_DATA,imageData);
             contentValues.put(ITEM_NAME,name);
             contentValues.put(ITEM_PRICE,price);
             contentValues.put(ITEM_CATEGORY,category);
@@ -202,10 +203,10 @@ public class DBContext extends SQLiteOpenHelper {
     {
         SQLiteDatabase database=this.getWritableDatabase();
         try{
-
+            byte[] imageData = Base64.decode(image_data, Base64.DEFAULT);
             ContentValues contentValues=new ContentValues();
             contentValues.put(ITEM_USERID,user_id);
-            contentValues.put(IMAGE_DATA,image_data);
+            contentValues.put(IMAGE_DATA,imageData);
             contentValues.put(ITEM_NAME,name);
             contentValues.put(ITEM_PRICE,price);
             contentValues.put(ITEM_CATEGORY,category);
@@ -275,8 +276,9 @@ public class DBContext extends SQLiteOpenHelper {
         if(cursor.moveToFirst())
         {
             do{
+                byte[] imageData = cursor.getBlob(2);
                 item_modelArrayList.add(new ItemModel(cursor.getString(0),cursor.getString(1),
-                        cursor.getString(2),cursor.getString(3),
+                        Base64.encodeToString(imageData, Base64.DEFAULT),cursor.getString(3),
                         cursor.getString(4),cursor.getString(6),
                         cursor.getString(5),cursor.getInt(7),cursor.getString(8),cursor.getString(9)));
 
@@ -310,20 +312,21 @@ public class DBContext extends SQLiteOpenHelper {
         String selection = ITEM_NAME+" LIKE ? AND "+ ITEM_USERID + " = ?";;
         String[] selectionArgs = { "%" + name + "%" ,user_id};
         Cursor cursor = db.query(ITEM_TABLE, null, selection, selectionArgs, null, null, null);
-        ArrayList<ItemModel> property_modelArrayList=new ArrayList<>();
+        ArrayList<ItemModel>  item_modelArrayList=new ArrayList<>();
 
         if(cursor.moveToFirst())
         {
             do{
-                property_modelArrayList.add(new ItemModel(cursor.getString(0),cursor.getString(1),
-                        cursor.getString(2),cursor.getString(3),
+                byte[] imageData = cursor.getBlob(2);
+                item_modelArrayList.add(new ItemModel(cursor.getString(0),cursor.getString(1),
+                        Base64.encodeToString(imageData, Base64.DEFAULT),cursor.getString(3),
                         cursor.getString(4),cursor.getString(6),
-                        cursor.getString(5), cursor.getInt(7),cursor.getString(8),cursor.getString(9)));
+                        cursor.getString(5),cursor.getInt(7),cursor.getString(8),cursor.getString(9)));
 
             }while (cursor.moveToNext());
         }
         db.close();
-        return property_modelArrayList;
+        return  item_modelArrayList;
     }
 
     //delete property form property table
@@ -371,10 +374,10 @@ public class DBContext extends SQLiteOpenHelper {
     {
         SQLiteDatabase database=this.getWritableDatabase();
         try{
-
+            byte[] imageData = Base64.decode(image_data, Base64.DEFAULT);
             ContentValues contentValues=new ContentValues();
 //            contentValues.put(ITEM_USERID,user_id);
-            contentValues.put(IMAGE_DATA,image_data);
+            contentValues.put(IMAGE_DATA,imageData);
             contentValues.put(ITEM_NAME,name);
             contentValues.put(ITEM_PRICE,price);
             contentValues.put(ITEM_CATEGORY,category);
@@ -398,10 +401,10 @@ public class DBContext extends SQLiteOpenHelper {
     {
         SQLiteDatabase database=this.getWritableDatabase();
         try{
-
+            byte[] imageData = Base64.decode(image_data, Base64.DEFAULT);
             ContentValues contentValues=new ContentValues();
 //            contentValues.put(ITEM_USERID,user_id);
-            contentValues.put(IMAGE_DATA,image_data);
+            contentValues.put(IMAGE_DATA,imageData);
             contentValues.put(ITEM_NAME,name);
             contentValues.put(ITEM_PRICE,price);
             contentValues.put(ITEM_CATEGORY,category);
