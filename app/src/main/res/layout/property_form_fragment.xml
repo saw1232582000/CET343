@@ -228,6 +228,22 @@
                 android:layout_marginHorizontal="20px"/>
         </LinearLayout>
 
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+
+            android:orientation="horizontal">
+
+            <com.google.android.material.button.MaterialButton
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                app:backgroundTint="#de692f"
+                android:id="@+id/location_btn"
+                android:text="Set location"
+                android:layout_marginTop="5px"
+                android:layout_marginHorizontal="20px"/>
+        </LinearLayout>
 
 
 

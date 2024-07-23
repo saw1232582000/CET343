@@ -42,6 +42,8 @@ public class DBContext extends SQLiteOpenHelper {
     private static String ITEM_PRICE="price";
     private static String ITEM_CATEGORY="category";
     private static String ITEM_DESCRIPTION="description";
+    private static String ITEM_LATITUDE = "latitude";
+    private static String ITEM_LONGITUDE = "longitude";
 
     private static String ITEM_IS_PURCHASED="is_purchased";
 
@@ -77,6 +79,8 @@ public class DBContext extends SQLiteOpenHelper {
                 ITEM_DESCRIPTION+" TEXT,"+
                 ITEM_CATEGORY + " TEXT," +
                 ITEM_IS_PURCHASED + " INTEGER," +
+                ITEM_LATITUDE + " TEXT," +
+                ITEM_LONGITUDE + " TEXT," +
                 "FOREIGN KEY(" + ITEM_ID + ") REFERENCES " + USER_TABLE + "(" + USER_ID + "))";
 
         db.execSQL(item_create);
@@ -89,17 +93,19 @@ public class DBContext extends SQLiteOpenHelper {
 //        db.execSQL("DROP TABLE IF EXISTS "+PROPERTY_TABLE);
 //        db.execSQL("DROP TABLE IF EXISTS "+ITEM_TABLE);
 
-            String item_create="CREATE TABLE "+ITEM_TABLE+"("+
-                    ITEM_ID+" INTEGER PRIMARY KEY AUTOINCREMENT,"+
-                    ITEM_USERID+" TEXT,"+
-                    IMAGE_DATA+" TEXT,"+
-                    ITEM_NAME+" TEXT,"+
-                    ITEM_PRICE+" TEXT,"+
-                    ITEM_DESCRIPTION+" TEXT,"+
-                    ITEM_CATEGORY + " TEXT," +
-                    ITEM_IS_PURCHASED + " INTEGER," +
-                    "FOREIGN KEY(" + ITEM_ID + ") REFERENCES " + USER_TABLE + "(" + USER_ID + "))";
-            db.execSQL(item_create);
+//            String item_create="CREATE TABLE "+ITEM_TABLE+"("+
+//                    ITEM_ID+" INTEGER PRIMARY KEY AUTOINCREMENT,"+
+//                    ITEM_USERID+" TEXT,"+
+//                    IMAGE_DATA+" TEXT,"+
+//                    ITEM_NAME+" TEXT,"+
+//                    ITEM_PRICE+" TEXT,"+
+//                    ITEM_DESCRIPTION+" TEXT,"+
+//                    ITEM_CATEGORY + " TEXT," +
+//                    ITEM_IS_PURCHASED + " INTEGER," +
+//                    ITEM_LATITUDE + " REAL," +
+//                    ITEM_LONGITUDE + " REAL," +
+//                    "FOREIGN KEY(" + ITEM_ID + ") REFERENCES " + USER_TABLE + "(" + USER_ID + "))";
+//            db.execSQL(item_create);
 
 
     }
@@ -178,6 +184,8 @@ public class DBContext extends SQLiteOpenHelper {
             contentValues.put(ITEM_CATEGORY,category);
             contentValues.put(ITEM_DESCRIPTION,description);
             contentValues.put(ITEM_IS_PURCHASED,0);
+            contentValues.put(ITEM_LATITUDE, "");
+            contentValues.put(ITEM_LONGITUDE, "");
             database.insert(ITEM_TABLE,null,contentValues);
             database.close();
             return true;
@@ -190,6 +198,32 @@ public class DBContext extends SQLiteOpenHelper {
 
     }
 
+    public boolean addItem(String user_id,String image_data,String name,String price,String category,String description,String latitude,String longitude)
+    {
+        SQLiteDatabase database=this.getWritableDatabase();
+        try{
+
+            ContentValues contentValues=new ContentValues();
+            contentValues.put(ITEM_USERID,user_id);
+            contentValues.put(IMAGE_DATA,image_data);
+            contentValues.put(ITEM_NAME,name);
+            contentValues.put(ITEM_PRICE,price);
+            contentValues.put(ITEM_CATEGORY,category);
+            contentValues.put(ITEM_DESCRIPTION,description);
+            contentValues.put(ITEM_IS_PURCHASED,0);
+            contentValues.put(ITEM_LATITUDE, latitude);
+            contentValues.put(ITEM_LONGITUDE, longitude);
+            database.insert(ITEM_TABLE,null,contentValues);
+            database.close();
+            return true;
+        }catch (Error e){
+            if(database.isOpen()){
+                database.close();
+            }
+            return false;
+        }
+
+    }
     //reading data from property
     public ArrayList<PropertyModel> readProperty()
     {
@@ -244,7 +278,7 @@ public class DBContext extends SQLiteOpenHelper {
                 item_modelArrayList.add(new ItemModel(cursor.getString(0),cursor.getString(1),
                         cursor.getString(2),cursor.getString(3),
                         cursor.getString(4),cursor.getString(6),
-                        cursor.getString(5), cursor.getInt(7)));
+                        cursor.getString(5),cursor.getInt(7),cursor.getString(8),cursor.getString(9)));
 
             }while (cursor.moveToNext());
         }
@@ -283,8 +317,8 @@ public class DBContext extends SQLiteOpenHelper {
             do{
                 property_modelArrayList.add(new ItemModel(cursor.getString(0),cursor.getString(1),
                         cursor.getString(2),cursor.getString(3),
-                        cursor.getString(4),cursor.getString(5),
-                        cursor.getString(6), cursor.getInt(5)));
+                        cursor.getString(4),cursor.getString(6),
+                        cursor.getString(5), cursor.getInt(7),cursor.getString(8),cursor.getString(9)));
 
             }while (cursor.moveToNext());
         }
@@ -333,6 +367,33 @@ public class DBContext extends SQLiteOpenHelper {
         db.update(PROPERTY_TABLE,contentValues,"ref_no=?",new String[]{original_ref_no});
 
     }
+    public boolean updateItem(String item_id,String image_data,String name,String price,String category,String description,int is_purchased,String latitude,String longitude)
+    {
+        SQLiteDatabase database=this.getWritableDatabase();
+        try{
+
+            ContentValues contentValues=new ContentValues();
+//            contentValues.put(ITEM_USERID,user_id);
+            contentValues.put(IMAGE_DATA,image_data);
+            contentValues.put(ITEM_NAME,name);
+            contentValues.put(ITEM_PRICE,price);
+            contentValues.put(ITEM_CATEGORY,category);
+            contentValues.put(ITEM_DESCRIPTION,description);
+            contentValues.put(ITEM_IS_PURCHASED,is_purchased);
+            contentValues.put(ITEM_LATITUDE, latitude);
+            contentValues.put(ITEM_LONGITUDE, longitude);
+            database.update(ITEM_TABLE,contentValues,"item_id=?",new String[]{item_id});
+            database.close();
+            return true;
+        }catch (Error e){
+            if(database.isOpen()){
+                database.close();
+            }
+            return false;
+        }
+
+    }
+
     public boolean updateItem(String item_id,String image_data,String name,String price,String category,String description,int is_purchased)
     {
         SQLiteDatabase database=this.getWritableDatabase();
