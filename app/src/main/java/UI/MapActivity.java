@@ -65,3 +65,36 @@
 //    }
 //}
 //
+package UI;
+import android.content.Intent;
+import android.os.Bundle;
+import android.util.Log;
+
+import androidx.fragment.app.FragmentActivity;
+
+import com.example.assignment.R;
+
+public class MapActivity extends FragmentActivity {
+
+
+    public  MapActivity() {
+
+    }
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_map);
+
+        if (savedInstanceState == null) {
+            Intent intent = getIntent();
+            String latitude = intent.getStringExtra("latitude");
+            String longitude = intent.getStringExtra("latitude");
+            Log.d("location after detail update", latitude+", "+longitude);
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.fragment_container, Location_Picker_Fragment.newInstance(Float.valueOf(latitude),Float.valueOf(longitude)))
+                    .commit();
+        }
+    }
+}
+

@@ -49,7 +49,7 @@
         </activity>
         <activity android:name="UI.dashboardActivity"></activity>
         <activity android:name=".SignupActivity" />
-<!--        <activity android:name="UI.MapActivity" />-->
+        <activity android:name="UI.MapActivity" />
     </application>
 
 </manifest>

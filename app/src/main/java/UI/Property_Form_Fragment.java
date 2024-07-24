@@ -17,15 +17,20 @@ import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentResultListener;
 import androidx.fragment.app.FragmentTransaction;
 
 
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Looper;
 import android.provider.MediaStore;
 import android.util.Base64;
 import android.util.Log;
@@ -83,11 +88,13 @@ public class Property_Form_Fragment extends Fragment {
     ImageView item_image;
     ImageView share_image;
 
-    String current_latitude="";
-    String current_longitude="";
+    private String current_latitude;
+    private String current_longitude;
 
     Button delete_btn;
     Button location_btn;
+
+    Button choose_location_btn;
     public String current_mode;
     public String current_username;
     private String user_id;
@@ -100,6 +107,8 @@ public class Property_Form_Fragment extends Fragment {
      private MapboxMap mapboxMap;
      private LocationHandlerWithMapBox locationHandlerWithMapBox;
      private boolean isLocationSelected=false;
+    private static final String TAG = "CallerFragment";
+    private Bundle callerFragmentState;
 
     DBContext dbContext;
     View ref_no_layout;
@@ -107,14 +116,18 @@ public class Property_Form_Fragment extends Fragment {
     String passed_item_id;
     int SELECT_PICTURE = 200;
     private ActivityResultLauncher<Intent> selectPictureLauncher;
-//    private ActivityResultLauncher<Void> mapActivityResultLauncher;
+    private ActivityResultLauncher<Intent> mapActivityResultLauncher;
     private static final int REQUEST_MAP_LOCATION = 2;
     private static final int REQUEST_LOCATION_PERMISSION = 1;
     DialogFragment dialogFragment = new DialogFragment();
+    private static final String STATE_LATITUDE = "state_latitude";
+    private static final String STATE_LONGITUDE = "state_longitude";
+    private Handler mainHandler = new Handler(Looper.getMainLooper());
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         sms_service=new SMSHelper(Property_Form_Fragment.this.getActivity());
+        Log.d(TAG, "location on create: " + current_latitude + ", " + current_longitude);
         // Register the ActivityResultLauncher
         selectPictureLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
@@ -153,6 +166,26 @@ public class Property_Form_Fragment extends Fragment {
                     }
                 }
         );
+        mapActivityResultLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                new ActivityResultCallback<ActivityResult>() {
+                    @Override
+                    public void onActivityResult(ActivityResult result) {
+                        if (result.getResultCode() == Activity.RESULT_OK) {
+                            Intent data = result.getData();
+                            if (data != null) {
+                                double latitude = data.getDoubleExtra("latitude", 0);
+                                double longitude = data.getDoubleExtra("longitude", 0);
+                                current_latitude = String.valueOf(latitude);
+                                current_longitude = String.valueOf(longitude);
+                                Toast.makeText(getContext(), "Selected location: " + current_latitude + ", " + current_longitude, Toast.LENGTH_LONG).show();
+                                // Use the returned location data
+                            }
+
+                        }
+                    }
+                }
+        );
 
 
 
@@ -186,6 +219,8 @@ public class Property_Form_Fragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         Bundle bundle=getArguments();
+        Log.d(TAG, "on create view: " + bundle.toString());
+        Log.d(TAG, "on create view: " + current_latitude + ", " + current_longitude);
         if(bundle!=null){
             current_mode =bundle.getString("mode");//check mode 'add_mode or 'edit_mode'
             current_username= bundle.getString("username");
@@ -219,12 +254,12 @@ public class Property_Form_Fragment extends Fragment {
 
 
 
-
+        choose_location_btn=form_view.findViewById(R.id.choose_location_btn);
         save_btn=form_view.findViewById(R.id.save_btn);
         delete_btn=form_view.findViewById(R.id.delete_btn);
 
         if(current_mode=="add_mode"){
-
+            getCurrentLocationForLocationPicker();
             save_btn.setText("Add");
             save_btn.setWidth(500);
             delete_btn.setVisibility(View.GONE);
@@ -261,17 +296,35 @@ public class Property_Form_Fragment extends Fragment {
 
 
             item_name.setText(selected_item_name);
-//            item_category.setSelection(item_category_adapter.getPosition(selected_item_category));
+
             price.setText(selected_item_price);
             description.setText(selected_item_description);
+
             current_latitude=i.getLatitude();
             current_longitude=i.getLongitude();
+
         }
+
+
+
+
 
         location_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 openMapFragment(Float.valueOf(current_latitude), Float.valueOf(current_longitude));
+            }
+        });
+        choose_location_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+//                double latitude= Float.valueOf(current_latitude);
+//                double longitude= Float.valueOf(current_longitude);
+//                openChooseMapFragment(latitude,longitude);
+                Intent intent = new Intent(Property_Form_Fragment.this.getActivity(), MapActivity.class);
+                intent.putExtra("latitude",current_latitude);
+                intent.putExtra("longitude",current_longitude);
+                mapActivityResultLauncher.launch(intent);
             }
         });
 
@@ -305,13 +358,14 @@ public class Property_Form_Fragment extends Fragment {
         save_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(current_mode=="add_mode"){
-                    getCurrentLocation();
-                }
-                if(current_mode=="detail_mode"){
-                    addData();
-                }
-//            addData();
+//                if(current_mode=="add_mode"){
+//                    getCurrentLocation();
+//                }
+//                if(current_mode=="detail_mode"){
+//                    addData();
+//                }
+                Toast.makeText(Property_Form_Fragment.this.getActivity(), "added location: " + current_latitude + ", " + current_longitude, Toast.LENGTH_LONG).show();
+            addData();
             }
         });
 
@@ -428,10 +482,29 @@ public class Property_Form_Fragment extends Fragment {
             public void onLocationResult(Location location) {
                 current_latitude = String.valueOf(location.getLatitude());
                  current_longitude = String.valueOf(location.getLongitude());
-                Toast.makeText(Property_Form_Fragment.this.getActivity(), "Current location: " + current_latitude + ", " + current_longitude, Toast.LENGTH_LONG).show();
-                Log.d("Image data", "Current location: " + current_latitude + ", " + current_longitude);
+               // Toast.makeText(Property_Form_Fragment.this.getActivity(), "Current location: " + current_latitude + ", " + current_longitude, Toast.LENGTH_LONG).show();
+               // Log.d("Image data", "Current location: " + current_latitude + ", " + current_longitude);
                 locationHandlerWithMapBox.removeLocationUpdates();
                 addData();
+            }
+
+            @Override
+            public void onLocationError(Exception exception) {
+                Toast.makeText(Property_Form_Fragment.this.getActivity(), "Error getting location: " + exception.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
+    private void getCurrentLocationForLocationPicker(){
+        locationHandlerWithMapBox = new LocationHandlerWithMapBox(Property_Form_Fragment.this.getActivity());
+        locationHandlerWithMapBox.setLocationCallback(new LocationHandlerWithMapBox.LocationCallback() {
+            @Override
+            public void onLocationResult(Location location) {
+                current_latitude = String.valueOf(location.getLatitude());
+                current_longitude = String.valueOf(location.getLongitude());
+
+                locationHandlerWithMapBox.removeLocationUpdates();
+
             }
 
             @Override
@@ -447,7 +520,7 @@ public class Property_Form_Fragment extends Fragment {
 
             String pr=price.getText().toString();
             String desc=description.getText().toString();
-
+//            Toast.makeText(Property_Form_Fragment.this.getActivity(), "added location: " + current_latitude + ", " + current_longitude, Toast.LENGTH_LONG).show();
             if(  pr.isEmpty() ||  it_name.isEmpty())
             {
                 Toast.makeText(Property_Form_Fragment.this.getActivity(), "Enter all data", Toast.LENGTH_SHORT).show();
@@ -497,5 +570,8 @@ public class Property_Form_Fragment extends Fragment {
         transaction.addToBackStack(null);
         transaction.commit();
     }
+
+
+
 
 }
