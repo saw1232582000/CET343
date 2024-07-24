@@ -13,7 +13,7 @@ import java.util.List;
 
 public class DBContext extends SQLiteOpenHelper {
     //declaring database name
-    private static String DB_NAME="rentalU";
+    private static String DB_NAME="BabyBuy";
 
     /*---------------declaring table name----------------------------*/
     private static String USER_TABLE="user_table";
@@ -78,7 +78,6 @@ public class DBContext extends SQLiteOpenHelper {
                 ITEM_NAME+" TEXT,"+
                 ITEM_PRICE+" TEXT,"+
                 ITEM_DESCRIPTION+" TEXT,"+
-                ITEM_CATEGORY + " TEXT," +
                 ITEM_IS_PURCHASED + " INTEGER," +
                 ITEM_LATITUDE + " TEXT," +
                 ITEM_LONGITUDE + " TEXT," +
@@ -172,7 +171,7 @@ public class DBContext extends SQLiteOpenHelper {
         }
 
     }
-    public boolean addItem(String user_id,String image_data,String name,String price,String category,String description)
+    public boolean addItem(String user_id,String image_data,String name,String price,String description)
     {
         SQLiteDatabase database=this.getWritableDatabase();
         try{
@@ -182,7 +181,7 @@ public class DBContext extends SQLiteOpenHelper {
             contentValues.put(IMAGE_DATA,imageData);
             contentValues.put(ITEM_NAME,name);
             contentValues.put(ITEM_PRICE,price);
-            contentValues.put(ITEM_CATEGORY,category);
+
             contentValues.put(ITEM_DESCRIPTION,description);
             contentValues.put(ITEM_IS_PURCHASED,0);
             contentValues.put(ITEM_LATITUDE, "");
@@ -199,7 +198,7 @@ public class DBContext extends SQLiteOpenHelper {
 
     }
 
-    public boolean addItem(String user_id,String image_data,String name,String price,String category,String description,String latitude,String longitude)
+    public boolean addItem(String user_id,String image_data,String name,String price,String description,String latitude,String longitude)
     {
         SQLiteDatabase database=this.getWritableDatabase();
         try{
@@ -209,7 +208,7 @@ public class DBContext extends SQLiteOpenHelper {
             contentValues.put(IMAGE_DATA,imageData);
             contentValues.put(ITEM_NAME,name);
             contentValues.put(ITEM_PRICE,price);
-            contentValues.put(ITEM_CATEGORY,category);
+
             contentValues.put(ITEM_DESCRIPTION,description);
             contentValues.put(ITEM_IS_PURCHASED,0);
             contentValues.put(ITEM_LATITUDE, latitude);
@@ -280,7 +279,7 @@ public class DBContext extends SQLiteOpenHelper {
                 item_modelArrayList.add(new ItemModel(cursor.getString(0),cursor.getString(1),
                         Base64.encodeToString(imageData, Base64.DEFAULT),cursor.getString(3),
                         cursor.getString(4),cursor.getString(6),
-                        cursor.getString(5),cursor.getInt(7),cursor.getString(8),cursor.getString(9)));
+                        cursor.getInt(6),cursor.getString(7),cursor.getString(8)));
 
             }while (cursor.moveToNext());
         }
@@ -321,7 +320,7 @@ public class DBContext extends SQLiteOpenHelper {
                 item_modelArrayList.add(new ItemModel(cursor.getString(0),cursor.getString(1),
                         Base64.encodeToString(imageData, Base64.DEFAULT),cursor.getString(3),
                         cursor.getString(4),cursor.getString(6),
-                        cursor.getString(5),cursor.getInt(7),cursor.getString(8),cursor.getString(9)));
+                        cursor.getInt(6),cursor.getString(7),cursor.getString(8)));
 
             }while (cursor.moveToNext());
         }
@@ -370,7 +369,7 @@ public class DBContext extends SQLiteOpenHelper {
         db.update(PROPERTY_TABLE,contentValues,"ref_no=?",new String[]{original_ref_no});
 
     }
-    public boolean updateItem(String item_id,String image_data,String name,String price,String category,String description,int is_purchased,String latitude,String longitude)
+    public boolean updateItem(String item_id,String image_data,String name,String price,String description,int is_purchased,String latitude,String longitude)
     {
         SQLiteDatabase database=this.getWritableDatabase();
         try{
@@ -380,7 +379,7 @@ public class DBContext extends SQLiteOpenHelper {
             contentValues.put(IMAGE_DATA,imageData);
             contentValues.put(ITEM_NAME,name);
             contentValues.put(ITEM_PRICE,price);
-            contentValues.put(ITEM_CATEGORY,category);
+
             contentValues.put(ITEM_DESCRIPTION,description);
             contentValues.put(ITEM_IS_PURCHASED,is_purchased);
             contentValues.put(ITEM_LATITUDE, latitude);
@@ -397,7 +396,7 @@ public class DBContext extends SQLiteOpenHelper {
 
     }
 
-    public boolean updateItem(String item_id,String image_data,String name,String price,String category,String description,int is_purchased)
+    public boolean updateItem(String item_id,String image_data,String name,String price,String description,int is_purchased)
     {
         SQLiteDatabase database=this.getWritableDatabase();
         try{
@@ -407,7 +406,7 @@ public class DBContext extends SQLiteOpenHelper {
             contentValues.put(IMAGE_DATA,imageData);
             contentValues.put(ITEM_NAME,name);
             contentValues.put(ITEM_PRICE,price);
-            contentValues.put(ITEM_CATEGORY,category);
+
             contentValues.put(ITEM_DESCRIPTION,description);
             contentValues.put(ITEM_IS_PURCHASED,is_purchased);
             database.update(ITEM_TABLE,contentValues,"item_id=?",new String[]{item_id});

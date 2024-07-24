@@ -71,7 +71,7 @@ import SMSHelper.SMSHelper;
 
 public class Property_Form_Fragment extends Fragment {
     EditText item_name;
-    Spinner item_category;
+//    Spinner item_category;
     EditText price;
 
     EditText description;
@@ -204,14 +204,14 @@ public class Property_Form_Fragment extends Fragment {
 
         /*------------------------------Bind with ui-----------------------------------------*/
         item_name=form_view.findViewById(R.id.item_name);
-        item_category=form_view.findViewById(R.id.item_category);
+//        item_category=form_view.findViewById(R.id.item_category);
         price=form_view.findViewById(R.id.price);
         description=form_view.findViewById(R.id.item_description);
         image_upload_btn=form_view.findViewById(R.id.image_upload_btn);
         item_image=form_view.findViewById(R.id.imageView_item_image);
         is_purchased_checkbox=form_view.findViewById(R.id.item_is_purchased);
         is_purchased_checkbox_linearlayout=form_view.findViewById(R.id.item_is_purchased_layout);
-        item_category.setAdapter(item_category_adapter);
+//        item_category.setAdapter(item_category_adapter);
         share_image=form_view.findViewById(R.id.share_item);
         location_btn=form_view.findViewById(R.id.location_btn);
         dbContext=new DBContext(Property_Form_Fragment.this.getActivity());
@@ -240,7 +240,7 @@ public class Property_Form_Fragment extends Fragment {
             item_list=dbContext.read_item_by_item_id(passed_item_id);
             ItemModel i=item_list.get(0);
             String selected_item_name=i.getItem_name();
-            String selected_item_category=i.getCategory();
+
             String selected_item_price=i.getPrice();
             String selected_image_data=i.getImage_data();
             String selected_item_description=i.getDescription();
@@ -261,7 +261,7 @@ public class Property_Form_Fragment extends Fragment {
 
 
             item_name.setText(selected_item_name);
-            item_category.setSelection(item_category_adapter.getPosition(selected_item_category));
+//            item_category.setSelection(item_category_adapter.getPosition(selected_item_category));
             price.setText(selected_item_price);
             description.setText(selected_item_description);
             current_latitude=i.getLatitude();
@@ -400,7 +400,7 @@ public class Property_Form_Fragment extends Fragment {
                         if (!targetPhoneNumber.isEmpty()) {
                             // Replace with actual item data
                             String itemData = "Item name:"+item_name.getText()+"\n"+
-                                              "Item category:"+item_category.getSelectedItem().toString()+"\n"+
+
                                               "Item price:"+price.getText()+"\n"+
                                               "Item description:"+description.getText()+"\n";
                             Log.d("Target Phone:", targetPhoneNumber);
@@ -444,16 +444,16 @@ public class Property_Form_Fragment extends Fragment {
     private void addData(){
         if(current_mode=="add_mode"){
             String it_name=item_name.getText().toString();
-            String category=item_category.getSelectedItem().toString();
+
             String pr=price.getText().toString();
             String desc=description.getText().toString();
 
-            if( category.isEmpty() ||  pr.isEmpty() ||  it_name.isEmpty())
+            if(  pr.isEmpty() ||  it_name.isEmpty())
             {
                 Toast.makeText(Property_Form_Fragment.this.getActivity(), "Enter all data", Toast.LENGTH_SHORT).show();
             }
             else {
-                if(dbContext.addItem(user_id,image_base64_string,it_name,pr,category,desc,current_latitude,current_longitude)) {
+                if(dbContext.addItem(user_id,image_base64_string,it_name,pr,desc,current_latitude,current_longitude)) {
                     Toast.makeText(Property_Form_Fragment.this.getActivity(), "New item added successfully", Toast.LENGTH_SHORT).show();
                 }
                 else{
@@ -469,11 +469,11 @@ public class Property_Form_Fragment extends Fragment {
             String current_item_name=item_name.getText().toString();
             String current_price=price.getText().toString();
             String current_description=description.getText().toString();
-            String current_category=item_category.getSelectedItem().toString();
+
             String current_image_data=image_base64_string;
             int current_is_purchased=is_purchased;
             Log.d("Image data", current_image_data);
-            if(dbContext.updateItem(passed_item_id,current_image_data,current_item_name,current_price,current_category,current_description,current_is_purchased)) {
+            if(dbContext.updateItem(passed_item_id,current_image_data,current_item_name,current_price,current_description,current_is_purchased)) {
                 Toast.makeText(Property_Form_Fragment.this.getActivity(), "Item updated successfully", Toast.LENGTH_SHORT).show();
             }
             else{

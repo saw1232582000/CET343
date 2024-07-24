@@ -6,7 +6,7 @@ public class ItemModel {
     private String image_data;
     private String item_name;
     private String price;
-    private String category;
+
     private String description;
 
     private String latitude;
@@ -14,13 +14,13 @@ public class ItemModel {
 
     private int is_purchased;
 
-    public ItemModel(String id, String user_id, String image_data, String item_name, String price, String category, String description, int is_purchased, String latitude, String longitude) {
+    public ItemModel(String id, String user_id, String image_data, String item_name, String price, String description, int is_purchased, String latitude, String longitude) {
         this.id = id;
         this.user_id=user_id;
         this.image_data = image_data;
         this.item_name = item_name;
         this.price = price;
-        this.category = category;
+
         this.description = description;
         this.latitude = latitude;
         this.longitude = longitude;
@@ -67,13 +67,9 @@ public class ItemModel {
         this.price = price;
     }
 
-    public String getCategory() {
-        return category;
-    }
 
-    public void setCategory(String category) {
-        this.category = category;
-    }
+
+
 
     public String getDescription() {
         return description;

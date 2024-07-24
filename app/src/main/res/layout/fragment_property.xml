@@ -22,7 +22,7 @@
                 android:layout_width="300dp"
                 android:layout_height="wrap_content"
                 android:id="@+id/property_search"
-                android:hint="Search by ref no"
+                android:hint="Search by item name"
                 android:background="@drawable/form_textbox"
                 android:drawablePadding="8dp"
                 android:drawableLeft="@drawable/baseline_search_24"
