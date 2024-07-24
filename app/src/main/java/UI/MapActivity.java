@@ -69,6 +69,7 @@ package UI;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.Toast;
 
 import androidx.fragment.app.FragmentActivity;
 
@@ -89,8 +90,8 @@ public class MapActivity extends FragmentActivity {
         if (savedInstanceState == null) {
             Intent intent = getIntent();
             String latitude = intent.getStringExtra("latitude");
-            String longitude = intent.getStringExtra("latitude");
-            Log.d("location after detail update", latitude+", "+longitude);
+            String longitude = intent.getStringExtra("longitude");
+
             getSupportFragmentManager().beginTransaction()
                     .replace(R.id.fragment_container, Location_Picker_Fragment.newInstance(Float.valueOf(latitude),Float.valueOf(longitude)))
                     .commit();

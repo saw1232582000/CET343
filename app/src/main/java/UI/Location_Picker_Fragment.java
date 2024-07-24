@@ -9,6 +9,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.SearchView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -16,6 +17,11 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 
 import com.example.assignment.R;
+import com.mapbox.api.geocoding.v5.MapboxGeocoding;
+import com.mapbox.api.geocoding.v5.models.CarmenFeature;
+import com.mapbox.api.geocoding.v5.models.GeocodingResponse;
+import com.mapbox.geojson.Point;
+import com.mapbox.mapboxsdk.annotations.MarkerOptions;
 import com.mapbox.mapboxsdk.camera.CameraUpdateFactory;
 import com.mapbox.mapboxsdk.geometry.LatLng;
 import com.mapbox.mapboxsdk.maps.MapView;
@@ -27,6 +33,9 @@ import com.mapbox.mapboxsdk.plugins.annotation.SymbolManager;
 import com.mapbox.mapboxsdk.plugins.annotation.SymbolOptions;
 
 import LoactionHandlerWIthMapBox.LocationHandlerWithMapBox;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class Location_Picker_Fragment extends Fragment {
     private static final String TAG = "LocationPickerFragment";
@@ -41,7 +50,7 @@ public class Location_Picker_Fragment extends Fragment {
     private double current_longitude;
     private static final String ARG_LATITUDE = "latitude";
     private static final String ARG_LONGITUDE = "longitude";
-
+    private SearchView searchView;
 
     public Location_Picker_Fragment() {
         // Required empty public constructor
@@ -73,7 +82,7 @@ public class Location_Picker_Fragment extends Fragment {
         View view = inflater.inflate(R.layout.map_box_location_picker, container, false);
         mapView = view.findViewById(R.id.mapBoxLocationPicker);
         Button confirmButton = view.findViewById(R.id.location_select_button);
-
+        searchView = view.findViewById(R.id.searchView);
         mapView.onCreate(savedInstanceState);
         mapView.getMapAsync(new OnMapReadyCallback() {
             @Override
@@ -104,7 +113,7 @@ public class Location_Picker_Fragment extends Fragment {
                         if (selectedLocationSymbol != null) {
                             symbolManager.delete(selectedLocationSymbol);
                         }
-                        Toast.makeText(Location_Picker_Fragment.this.getActivity(), "Current location: " + String.valueOf(point.getLatitude())+ ", " + String.valueOf(point.getLongitude()), Toast.LENGTH_LONG).show();
+
                         selectedLocation = point;
                         SymbolOptions symbolOptions = new SymbolOptions()
                                 .withLatLng(point)
@@ -132,8 +141,56 @@ public class Location_Picker_Fragment extends Fragment {
                 }
             }
         });
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                performSearch(query);
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                return false;
+            }
+        });
 
         return view;
+    }
+
+    private void performSearch(String query) {
+        MapboxGeocoding mapboxGeocoding = MapboxGeocoding.builder()
+                .accessToken(getString(R.string.mapbox_access_token))
+                .query(query)
+                .build();
+
+        mapboxGeocoding.enqueueCall(new Callback<GeocodingResponse>() {
+            @Override
+            public void onResponse(Call<GeocodingResponse> call, Response<GeocodingResponse> response) {
+                if (response.body() != null && response.body().features().size() > 0) {
+                    CarmenFeature feature = response.body().features().get(0);
+                    Point point = feature.center();
+                    addSymbol(new LatLng(point.latitude(), point.longitude()), feature.placeName());
+                    mapboxMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(point.latitude(), point.longitude()), 14));
+
+
+                }
+            }
+
+            @Override
+            public void onFailure(Call<GeocodingResponse> call, Throwable t) {
+                Log.e("MainActivity", "Geocoding Failure: " + t.getMessage());
+            }
+        });
+    }
+    private void addSymbol(LatLng position, String title) {
+        symbolManager.create(new SymbolOptions()
+                .withLatLng(position)
+                .withIconImage("marker-icon")
+                .withTextField(title)
+                .withTextOffset(new Float[]{0f, -2f})
+                .withTextAnchor("top")
+                .withIconSize(1.0f)
+        );
     }
 
     @Override

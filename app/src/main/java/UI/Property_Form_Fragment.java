@@ -92,7 +92,7 @@ public class Property_Form_Fragment extends Fragment {
     private String current_longitude;
 
     Button delete_btn;
-    Button location_btn;
+
 
     Button choose_location_btn;
     public String current_mode;
@@ -178,7 +178,7 @@ public class Property_Form_Fragment extends Fragment {
                                 double longitude = data.getDoubleExtra("longitude", 0);
                                 current_latitude = String.valueOf(latitude);
                                 current_longitude = String.valueOf(longitude);
-                                Toast.makeText(getContext(), "Selected location: " + current_latitude + ", " + current_longitude, Toast.LENGTH_LONG).show();
+
                                 // Use the returned location data
                             }
 
@@ -248,7 +248,7 @@ public class Property_Form_Fragment extends Fragment {
         is_purchased_checkbox_linearlayout=form_view.findViewById(R.id.item_is_purchased_layout);
 //        item_category.setAdapter(item_category_adapter);
         share_image=form_view.findViewById(R.id.share_item);
-        location_btn=form_view.findViewById(R.id.location_btn);
+
         dbContext=new DBContext(Property_Form_Fragment.this.getActivity());
 
 
@@ -266,7 +266,7 @@ public class Property_Form_Fragment extends Fragment {
             is_purchased_checkbox.setVisibility(View.GONE);
             is_purchased_checkbox_linearlayout.setMinimumHeight(0);
             is_purchased_checkbox_linearlayout.setVisibility(View.GONE);
-            location_btn.setVisibility(View.GONE);
+
         }
         if(current_mode=="detail_mode"){
 
@@ -309,12 +309,7 @@ public class Property_Form_Fragment extends Fragment {
 
 
 
-        location_btn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                openMapFragment(Float.valueOf(current_latitude), Float.valueOf(current_longitude));
-            }
-        });
+
         choose_location_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -364,7 +359,7 @@ public class Property_Form_Fragment extends Fragment {
 //                if(current_mode=="detail_mode"){
 //                    addData();
 //                }
-                Toast.makeText(Property_Form_Fragment.this.getActivity(), "added location: " + current_latitude + ", " + current_longitude, Toast.LENGTH_LONG).show();
+
             addData();
             }
         });
@@ -546,7 +541,7 @@ public class Property_Form_Fragment extends Fragment {
             String current_image_data=image_base64_string;
             int current_is_purchased=is_purchased;
             Log.d("Image data", current_image_data);
-            if(dbContext.updateItem(passed_item_id,current_image_data,current_item_name,current_price,current_description,current_is_purchased)) {
+            if(dbContext.updateItem(passed_item_id,current_image_data,current_item_name,current_price,current_description,current_is_purchased,current_latitude,current_longitude)) {
                 Toast.makeText(Property_Form_Fragment.this.getActivity(), "Item updated successfully", Toast.LENGTH_SHORT).show();
             }
             else{
