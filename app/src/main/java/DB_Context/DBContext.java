@@ -278,7 +278,7 @@ public class DBContext extends SQLiteOpenHelper {
                 byte[] imageData = cursor.getBlob(2);
                 item_modelArrayList.add(new ItemModel(cursor.getString(0),cursor.getString(1),
                         Base64.encodeToString(imageData, Base64.DEFAULT),cursor.getString(3),
-                        cursor.getString(4),cursor.getString(6),
+                        cursor.getString(4),cursor.getString(5),
                         cursor.getInt(6),cursor.getString(7),cursor.getString(8)));
 
             }while (cursor.moveToNext());
@@ -319,7 +319,7 @@ public class DBContext extends SQLiteOpenHelper {
                 byte[] imageData = cursor.getBlob(2);
                 item_modelArrayList.add(new ItemModel(cursor.getString(0),cursor.getString(1),
                         Base64.encodeToString(imageData, Base64.DEFAULT),cursor.getString(3),
-                        cursor.getString(4),cursor.getString(6),
+                        cursor.getString(4),cursor.getString(5),
                         cursor.getInt(6),cursor.getString(7),cursor.getString(8)));
 
             }while (cursor.moveToNext());
