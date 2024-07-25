@@ -32,6 +32,7 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.provider.MediaStore;
+import android.telephony.SmsManager;
 import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -61,6 +62,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -211,12 +214,18 @@ public class Property_Form_Fragment extends Fragment {
         requestPermissionLauncher = registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), result -> {
             Boolean fineLocationGranted = result.getOrDefault(Manifest.permission.ACCESS_FINE_LOCATION, false);
             Boolean coarseLocationGranted = result.getOrDefault(Manifest.permission.ACCESS_COARSE_LOCATION, false);
+            Boolean sendSmsGranted = result.getOrDefault(Manifest.permission.SEND_SMS, false);
             if (fineLocationGranted != null && fineLocationGranted) {
                 // Permission for ACCESS_FINE_LOCATION is granted
             } else if (coarseLocationGranted != null && coarseLocationGranted) {
                 // Permission for ACCESS_COARSE_LOCATION is granted
             } else {
                 // No location permissions are granted
+            }
+            if (sendSmsGranted != null && sendSmsGranted) {
+                // Permission for SEND_SMS is granted
+            } else {
+                // Permission for SEND_SMS is not granted
             }
         });
 
@@ -242,7 +251,8 @@ public class Property_Form_Fragment extends Fragment {
         }
         requestPermissionLauncher.launch(new String[]{
                 Manifest.permission.ACCESS_FINE_LOCATION,
-                Manifest.permission.ACCESS_COARSE_LOCATION
+                Manifest.permission.ACCESS_COARSE_LOCATION,
+                Manifest.permission.SEND_SMS
         });
         SharedPreferences sharedPreferences = getActivity().getSharedPreferences("UserSession",Property_Form_Fragment.this.getActivity().MODE_PRIVATE);
         user_id = sharedPreferences.getString("user_id", null);
@@ -463,15 +473,17 @@ public class Property_Form_Fragment extends Fragment {
                     public void onClick(DialogInterface dialog, int which) {
                         EditText editTextPhoneNumber = dialogView.findViewById(R.id.share_phone);
                         String targetPhoneNumber = editTextPhoneNumber.getText().toString();
-
+                        String item_location=generateLocationUrl(Float.valueOf(current_latitude),Float.valueOf(current_longitude));
                         if (!targetPhoneNumber.isEmpty()) {
                             // Replace with actual item data
                             String itemData = "Item name:"+item_name.getText()+"\n"+
-
                                               "Item price:"+price.getText()+"\n"+
-                                              "Item description:"+description.getText()+"\n";
+                                              "Item description:"+description.getText()+
+                                              "Item location:"+item_location+"\n"+"\n";
                             Log.d("Target Phone:", targetPhoneNumber);
+                            sms_service=new SMSHelper(Property_Form_Fragment.this.getContext());
                             sms_service.sendSms(targetPhoneNumber,itemData);
+
                         } else {
                             Toast.makeText(getActivity(), "Phone number cannot be empty", Toast.LENGTH_SHORT).show();
                         }
@@ -584,6 +596,15 @@ public class Property_Form_Fragment extends Fragment {
         transaction.commit();
     }
 
+    public String generateLocationUrl(double latitude, double longitude) {
+        try {
+            String url = "https://www.google.com/maps?q=" + URLEncoder.encode(latitude + "," + longitude, "UTF-8");
+            return url;
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 
 
 
