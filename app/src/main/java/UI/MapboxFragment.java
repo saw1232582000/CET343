@@ -1,17 +1,29 @@
 package UI;
 
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.location.Location;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
 
 import com.example.assignment.R;
+import com.mapbox.android.core.permissions.PermissionsListener;
+import com.mapbox.android.core.permissions.PermissionsManager;
 import com.mapbox.mapboxsdk.camera.CameraUpdateFactory;
 import com.mapbox.mapboxsdk.geometry.LatLng;
+import com.mapbox.mapboxsdk.location.LocationComponent;
+import com.mapbox.mapboxsdk.location.LocationComponentActivationOptions;
+import com.mapbox.mapboxsdk.location.LocationComponentOptions;
+import com.mapbox.mapboxsdk.location.modes.CameraMode;
+import com.mapbox.mapboxsdk.location.modes.RenderMode;
 import com.mapbox.mapboxsdk.maps.MapView;
 import com.mapbox.mapboxsdk.maps.MapboxMap;
 import com.mapbox.mapboxsdk.maps.OnMapReadyCallback;
@@ -19,6 +31,8 @@ import com.mapbox.mapboxsdk.maps.Style;
 import com.mapbox.mapboxsdk.plugins.annotation.Symbol;
 import com.mapbox.mapboxsdk.plugins.annotation.SymbolManager;
 import com.mapbox.mapboxsdk.plugins.annotation.SymbolOptions;
+
+import LoactionHandlerWIthMapBox.LocationHandlerWithMapBox;
 
 
 public class MapboxFragment extends Fragment {
@@ -31,6 +45,9 @@ public class MapboxFragment extends Fragment {
     private MapView mapView;
     private MapboxMap mapboxMap;
     private SymbolManager symbolManager;
+
+
+
     public MapboxFragment() {
         // Required empty public constructor
     }
@@ -62,12 +79,19 @@ public class MapboxFragment extends Fragment {
         mapView.getMapAsync(new OnMapReadyCallback() {
             @Override
             public void onMapReady(@NonNull MapboxMap mapboxMap) {
+
                 MapboxFragment.this.mapboxMap = mapboxMap;
-                Log.d("latitude,longitude:", String.valueOf(latitude) + "," + String.valueOf(longitude));
-                LatLng initialLocation = new LatLng(latitude, longitude);
+
                 mapboxMap.setStyle(Style.MAPBOX_STREETS, new Style.OnStyleLoaded() {
                     @Override
                     public void onStyleLoaded(@NonNull Style style) {
+
+                        Log.d("latitude,longitude:", String.valueOf(latitude) + "," + String.valueOf(longitude));
+                        LocationComponent locationComponent = mapboxMap.getLocationComponent();
+                        Location lastKnownLocation = locationComponent.getLastKnownLocation();
+                        latitude = lastKnownLocation.getLatitude();
+                        longitude = lastKnownLocation.getLongitude();
+                        LatLng initialLocation = new LatLng(latitude, longitude);
                         mapboxMap.animateCamera(CameraUpdateFactory.newLatLngZoom(initialLocation, 16.0));
                         // Create a SymbolManager
                         symbolManager = new SymbolManager(mapView, mapboxMap, style);
@@ -84,6 +108,7 @@ public class MapboxFragment extends Fragment {
                 });
             }
         });
+
         return view;
     }
 
@@ -128,4 +153,10 @@ public class MapboxFragment extends Fragment {
         super.onSaveInstanceState(outState);
         mapView.onSaveInstanceState(outState);
     }
+
+
+
+
+
+
 }

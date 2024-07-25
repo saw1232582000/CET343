@@ -5,9 +5,12 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.util.Base64;
 import android.util.Log;
 
+import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -175,7 +178,7 @@ public class DBContext extends SQLiteOpenHelper {
     {
         SQLiteDatabase database=this.getWritableDatabase();
         try{
-            byte[] imageData = Base64.decode(image_data, Base64.DEFAULT);
+            byte[] imageData = compressImage(image_data);
             ContentValues contentValues=new ContentValues();
             contentValues.put(ITEM_USERID,user_id);
             contentValues.put(IMAGE_DATA,imageData);
@@ -202,7 +205,7 @@ public class DBContext extends SQLiteOpenHelper {
     {
         SQLiteDatabase database=this.getWritableDatabase();
         try{
-            byte[] imageData = Base64.decode(image_data, Base64.DEFAULT);
+            byte[] imageData = compressImage(image_data);
             ContentValues contentValues=new ContentValues();
             contentValues.put(ITEM_USERID,user_id);
             contentValues.put(IMAGE_DATA,imageData);
@@ -373,7 +376,7 @@ public class DBContext extends SQLiteOpenHelper {
     {
         SQLiteDatabase database=this.getWritableDatabase();
         try{
-            byte[] imageData = Base64.decode(image_data, Base64.DEFAULT);
+            byte[] imageData = compressImage(image_data);
             ContentValues contentValues=new ContentValues();
 //            contentValues.put(ITEM_USERID,user_id);
             contentValues.put(IMAGE_DATA,imageData);
@@ -400,7 +403,7 @@ public class DBContext extends SQLiteOpenHelper {
     {
         SQLiteDatabase database=this.getWritableDatabase();
         try{
-            byte[] imageData = Base64.decode(image_data, Base64.DEFAULT);
+            byte[] imageData = compressImage(image_data);
             ContentValues contentValues=new ContentValues();
 //            contentValues.put(ITEM_USERID,user_id);
             contentValues.put(IMAGE_DATA,imageData);
@@ -443,4 +446,16 @@ public class DBContext extends SQLiteOpenHelper {
 
         return tableList;
     }
+    public byte[] compressImage(String imageData) {
+        // Decode base64 string to bitmap
+        byte[] decodedString = Base64.decode(imageData, Base64.DEFAULT);
+        Bitmap bitmap = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+
+        // Compress bitmap to byte array
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 50, byteArrayOutputStream); // Change 50 to desired quality level
+
+        return byteArrayOutputStream.toByteArray();
+    }
+
 }

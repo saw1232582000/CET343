@@ -91,10 +91,17 @@ public class MapActivity extends FragmentActivity {
             Intent intent = getIntent();
             String latitude = intent.getStringExtra("latitude");
             String longitude = intent.getStringExtra("longitude");
+            if(latitude == null || latitude == "" || longitude == null || longitude == ""){
+                getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.fragment_container, new Location_Picker_Fragment())
+                        .commit();
+            }
+            else{
+                getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.fragment_container, Location_Picker_Fragment.newInstance(Float.valueOf(latitude),Float.valueOf(longitude)))
+                        .commit();
+            }
 
-            getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.fragment_container, Location_Picker_Fragment.newInstance(Float.valueOf(latitude),Float.valueOf(longitude)))
-                    .commit();
         }
     }
 }

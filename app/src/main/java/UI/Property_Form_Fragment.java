@@ -117,6 +117,8 @@ public class Property_Form_Fragment extends Fragment {
     int SELECT_PICTURE = 200;
     private ActivityResultLauncher<Intent> selectPictureLauncher;
     private ActivityResultLauncher<Intent> mapActivityResultLauncher;
+    private ActivityResultLauncher<String[]> requestPermissionLauncher;
+
     private static final int REQUEST_MAP_LOCATION = 2;
     private static final int REQUEST_LOCATION_PERMISSION = 1;
     DialogFragment dialogFragment = new DialogFragment();
@@ -206,11 +208,23 @@ public class Property_Form_Fragment extends Fragment {
 //                    }
 //                });
 
+        requestPermissionLauncher = registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), result -> {
+            Boolean fineLocationGranted = result.getOrDefault(Manifest.permission.ACCESS_FINE_LOCATION, false);
+            Boolean coarseLocationGranted = result.getOrDefault(Manifest.permission.ACCESS_COARSE_LOCATION, false);
+            if (fineLocationGranted != null && fineLocationGranted) {
+                // Permission for ACCESS_FINE_LOCATION is granted
+            } else if (coarseLocationGranted != null && coarseLocationGranted) {
+                // Permission for ACCESS_COARSE_LOCATION is granted
+            } else {
+                // No location permissions are granted
+            }
+        });
+
         // Check permissions
-        if (ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                && ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, REQUEST_LOCATION_PERMISSION);
-        }
+//        if (ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+//                && ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+//            requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, REQUEST_LOCATION_PERMISSION);
+//        }
 
 
     }
@@ -226,6 +240,10 @@ public class Property_Form_Fragment extends Fragment {
             current_username= bundle.getString("username");
 
         }
+        requestPermissionLauncher.launch(new String[]{
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+        });
         SharedPreferences sharedPreferences = getActivity().getSharedPreferences("UserSession",Property_Form_Fragment.this.getActivity().MODE_PRIVATE);
         user_id = sharedPreferences.getString("user_id", null);
 
@@ -259,7 +277,7 @@ public class Property_Form_Fragment extends Fragment {
         delete_btn=form_view.findViewById(R.id.delete_btn);
 
         if(current_mode=="add_mode"){
-            getCurrentLocationForLocationPicker();
+            //getCurrentLocationForLocationPicker();
             save_btn.setText("Add");
             save_btn.setWidth(500);
             delete_btn.setVisibility(View.GONE);
