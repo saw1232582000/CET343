@@ -555,7 +555,7 @@ public class Property_Form_Fragment extends Fragment {
                     item_name.setText("");
                     price.setText("");
                     description.setText("");
-                    item_image.setImageDrawable(null);
+                    item_image.setImageResource(R.drawable.ic_menu_gallery);
 
                     Toast.makeText(Property_Form_Fragment.this.getActivity(), "New item added successfully", Toast.LENGTH_SHORT).show();
                 }
