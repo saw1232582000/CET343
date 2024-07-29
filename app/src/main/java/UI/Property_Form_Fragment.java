@@ -473,7 +473,7 @@ public class Property_Form_Fragment extends Fragment {
                     public void onClick(DialogInterface dialog, int which) {
                         EditText editTextPhoneNumber = dialogView.findViewById(R.id.share_phone);
                         String targetPhoneNumber = editTextPhoneNumber.getText().toString();
-                        String item_location=generateLocationUrl(Float.valueOf(current_latitude),Float.valueOf(current_longitude));
+                        String item_location=generateLocationUrl(current_latitude,current_longitude);
                         if (!targetPhoneNumber.isEmpty()) {
                             // Replace with actual item data
                             String itemData = "Item name:"+item_name.getText()+"\n"+
@@ -546,7 +546,7 @@ public class Property_Form_Fragment extends Fragment {
             String pr=price.getText().toString();
             String desc=description.getText().toString();
 //            Toast.makeText(Property_Form_Fragment.this.getActivity(), "added location: " + current_latitude + ", " + current_longitude, Toast.LENGTH_LONG).show();
-            if(  pr.isEmpty() ||  it_name.isEmpty())
+            if(  pr.isEmpty() ||  it_name.isEmpty() || image_base64_string.isEmpty())
             {
                 Toast.makeText(Property_Form_Fragment.this.getActivity(), "Enter all data", Toast.LENGTH_SHORT).show();
             }
@@ -601,10 +601,18 @@ public class Property_Form_Fragment extends Fragment {
         transaction.commit();
     }
 
-    public String generateLocationUrl(double latitude, double longitude) {
+    public String generateLocationUrl(String latitude, String longitude) {
         try {
-            String url = "https://www.google.com/maps?q=" + URLEncoder.encode(latitude + "," + longitude, "UTF-8");
-            return url;
+
+            if( latitude !=null  && latitude != null){
+
+                String url = "https://www.google.com/maps?q=" + URLEncoder.encode(Float.valueOf(latitude) + "," + Float.valueOf(longitude), "UTF-8");
+                return url;
+            }
+            else{
+                return "";
+            }
+
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
             return null;
