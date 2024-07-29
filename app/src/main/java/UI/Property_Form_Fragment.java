@@ -478,8 +478,8 @@ public class Property_Form_Fragment extends Fragment {
                             // Replace with actual item data
                             String itemData = "Item name:"+item_name.getText()+"\n"+
                                               "Item price:"+price.getText()+"\n"+
-                                              "Item description:"+description.getText()+
-                                              "Item location:"+item_location+"\n"+"\n";
+                                              "Item description:"+description.getText()+"\n"+
+                                              "Item location:"+item_location+"\n";
                             Log.d("Target Phone:", targetPhoneNumber);
                             sms_service=new SMSHelper(Property_Form_Fragment.this.getContext());
                             sms_service.sendSms(targetPhoneNumber,itemData);
@@ -552,6 +552,11 @@ public class Property_Form_Fragment extends Fragment {
             }
             else {
                 if(dbContext.addItem(user_id,image_base64_string,it_name,pr,desc,current_latitude,current_longitude)) {
+                    item_name.setText("");
+                    price.setText("");
+                    description.setText("");
+                    item_image.setImageDrawable(null);
+
                     Toast.makeText(Property_Form_Fragment.this.getActivity(), "New item added successfully", Toast.LENGTH_SHORT).show();
                 }
                 else{
