@@ -9,6 +9,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
 
@@ -16,22 +17,29 @@ import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentResultListener;
+import androidx.fragment.app.FragmentTransaction;
 
 
-
+import android.os.Environment;
+import android.os.Handler;
+import android.os.Looper;
 import android.provider.MediaStore;
+import android.telephony.SmsManager;
 import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.AutoCompleteTextView;
+
 import android.widget.Button;
 
 import android.widget.CheckBox;
@@ -39,32 +47,39 @@ import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.RadioGroup;
+
 import android.widget.Spinner;
 import android.widget.Toast;
 
 
 import com.example.assignment.R;
-import com.google.android.material.textfield.TextInputLayout;
+import com.mapbox.mapboxsdk.maps.MapView;
+import com.mapbox.mapboxsdk.maps.MapboxMap;
 
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
-import java.util.Calendar;
+
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
-import java.util.Locale;
+
 
 import DB_Context.DBContext;
 import DB_Context.ItemModel;
-import DB_Context.PropertyModel;
-import LocationHelper.LocationHelper;
+
+import LoactionHandlerWIthMapBox.LocationHandlerWithMapBox;
+
 import SMSHelper.SMSHelper;
-import LocationHelper.MapActivityResultContract;
+
 
 public class Property_Form_Fragment extends Fragment {
     EditText item_name;
-    Spinner item_category;
+//    Spinner item_category;
     EditText price;
 
     EditText description;
@@ -76,29 +91,48 @@ public class Property_Form_Fragment extends Fragment {
     ImageView item_image;
     ImageView share_image;
 
+    private String current_latitude;
+    private String current_longitude;
+
     Button delete_btn;
-    Button location_btn;
+
+
+    Button choose_location_btn;
     public String current_mode;
     public String current_username;
     private String user_id;
-    private String image_base64_string;
+    private String image_base64_string="";
+    private Uri cameraImageUri;
      private int is_purchased;
      private SMSHelper sms_service;
-    private LocationHelper locationHelper;
+
+     private MapView mapView;
+     private MapboxMap mapboxMap;
+     private LocationHandlerWithMapBox locationHandlerWithMapBox;
+     private boolean isLocationSelected=false;
+    private static final String TAG = "CallerFragment";
+    private Bundle callerFragmentState;
+
     DBContext dbContext;
     View ref_no_layout;
     List<ItemModel> item_list;
     String passed_item_id;
     int SELECT_PICTURE = 200;
     private ActivityResultLauncher<Intent> selectPictureLauncher;
-    private ActivityResultLauncher<Void> mapActivityResultLauncher;
+    private ActivityResultLauncher<Intent> mapActivityResultLauncher;
+    private ActivityResultLauncher<String[]> requestPermissionLauncher;
+
     private static final int REQUEST_MAP_LOCATION = 2;
     private static final int REQUEST_LOCATION_PERMISSION = 1;
     DialogFragment dialogFragment = new DialogFragment();
+    private static final String STATE_LATITUDE = "state_latitude";
+    private static final String STATE_LONGITUDE = "state_longitude";
+    private Handler mainHandler = new Handler(Looper.getMainLooper());
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         sms_service=new SMSHelper(Property_Form_Fragment.this.getActivity());
+        Log.d(TAG, "location on create: " + current_latitude + ", " + current_longitude);
         // Register the ActivityResultLauncher
         selectPictureLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
@@ -107,39 +141,99 @@ public class Property_Form_Fragment extends Fragment {
                     public void onActivityResult(ActivityResult result) {
                         if (result.getResultCode() == Activity.RESULT_OK) {
                             Intent data = result.getData();
+                            Uri selectedImageUri=null;
+
                             if (data != null) {
-                                Uri selectedImageUri = data.getData();
-                                // Set the image to the ImageView
-                                item_image.setImageURI(selectedImageUri);
-                                image_base64_string = convertImageToBase64(selectedImageUri);
+                                selectedImageUri = data.getData();
+                                if(selectedImageUri == null){
+                                    Bitmap photo = (Bitmap) data.getExtras().get("data");
+                                    item_image.setImageBitmap(photo);
+                                    image_base64_string=bitmapToBase64(photo);
+                                }
+                                else{
+                                    // Set the image to the ImageView
+                                    item_image.setImageURI(selectedImageUri);
+                                    image_base64_string = convertImageToBase64(selectedImageUri);
+                                }
+
                             }
+//                            if (data != null) {
+//                                selectedImageUri = data.getData();
+//                            }
+//                            if (selectedImageUri == null && cameraImageUri != null) {
+//                                selectedImageUri = cameraImageUri;
+//                            }
+//                            if (selectedImageUri != null) {
+//                                item_image.setImageURI(selectedImageUri);
+//                                image_base64_string = convertImageToBase64(selectedImageUri);
+//                            }
+                        }
+                    }
+                }
+        );
+        mapActivityResultLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                new ActivityResultCallback<ActivityResult>() {
+                    @Override
+                    public void onActivityResult(ActivityResult result) {
+                        if (result.getResultCode() == Activity.RESULT_OK) {
+                            Intent data = result.getData();
+                            if (data != null) {
+                                double latitude = data.getDoubleExtra("latitude", 0);
+                                double longitude = data.getDoubleExtra("longitude", 0);
+                                current_latitude = String.valueOf(latitude);
+                                current_longitude = String.valueOf(longitude);
+
+                                // Use the returned location data
+                            }
+
                         }
                     }
                 }
         );
 
-        // Initialize the ActivityResultLauncher with the custom contract
-        mapActivityResultLauncher = registerForActivityResult(new MapActivityResultContract(),
-                new ActivityResultCallback<Intent>() {
-                    @Override
-                    public void onActivityResult(Intent result) {
-                        if (result != null) {
-                            double latitude = result.getDoubleExtra("latitude", 0);
-                            double longitude = result.getDoubleExtra("longitude", 0);
-                            String address = locationHelper.getAddressFromLocation(latitude, longitude);
-                            //TODO:set the location in textbox
-//                            locationTextView.setText(address);
 
-                            // Save latitude and longitude with your item data if needed
-                        }
-                    }
-                });
+
+        // Initialize the ActivityResultLauncher with the custom contract
+//        mapActivityResultLauncher = registerForActivityResult(new MapActivityResultContract(),
+//                new ActivityResultCallback<Intent>() {
+//                    @Override
+//                    public void onActivityResult(Intent result) {
+//                        if (result != null) {
+//                            double latitude = result.getDoubleExtra("latitude", 0);
+//                            double longitude = result.getDoubleExtra("longitude", 0);
+//
+//                            //TODO:set the location in textbox
+////                            locationTextView.setText(address);
+//
+//                            // Save latitude and longitude with your item data if needed
+//                        }
+//                    }
+//                });
+
+        requestPermissionLauncher = registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), result -> {
+            Boolean fineLocationGranted = result.getOrDefault(Manifest.permission.ACCESS_FINE_LOCATION, false);
+            Boolean coarseLocationGranted = result.getOrDefault(Manifest.permission.ACCESS_COARSE_LOCATION, false);
+            Boolean sendSmsGranted = result.getOrDefault(Manifest.permission.SEND_SMS, false);
+            if (fineLocationGranted != null && fineLocationGranted) {
+                // Permission for ACCESS_FINE_LOCATION is granted
+            } else if (coarseLocationGranted != null && coarseLocationGranted) {
+                // Permission for ACCESS_COARSE_LOCATION is granted
+            } else {
+                // No location permissions are granted
+            }
+            if (sendSmsGranted != null && sendSmsGranted) {
+                // Permission for SEND_SMS is granted
+            } else {
+                // Permission for SEND_SMS is not granted
+            }
+        });
 
         // Check permissions
-        if (ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                && ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, REQUEST_LOCATION_PERMISSION);
-        }
+//        if (ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+//                && ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+//            requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, REQUEST_LOCATION_PERMISSION);
+//        }
 
 
     }
@@ -148,11 +242,18 @@ public class Property_Form_Fragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         Bundle bundle=getArguments();
+        Log.d(TAG, "on create view: " + bundle.toString());
+        Log.d(TAG, "on create view: " + current_latitude + ", " + current_longitude);
         if(bundle!=null){
             current_mode =bundle.getString("mode");//check mode 'add_mode or 'edit_mode'
             current_username= bundle.getString("username");
 
         }
+        requestPermissionLauncher.launch(new String[]{
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION,
+                Manifest.permission.SEND_SMS
+        });
         SharedPreferences sharedPreferences = getActivity().getSharedPreferences("UserSession",Property_Form_Fragment.this.getActivity().MODE_PRIVATE);
         user_id = sharedPreferences.getString("user_id", null);
 
@@ -166,33 +267,34 @@ public class Property_Form_Fragment extends Fragment {
 
         /*------------------------------Bind with ui-----------------------------------------*/
         item_name=form_view.findViewById(R.id.item_name);
-        item_category=form_view.findViewById(R.id.item_category);
+//        item_category=form_view.findViewById(R.id.item_category);
         price=form_view.findViewById(R.id.price);
         description=form_view.findViewById(R.id.item_description);
         image_upload_btn=form_view.findViewById(R.id.image_upload_btn);
         item_image=form_view.findViewById(R.id.imageView_item_image);
         is_purchased_checkbox=form_view.findViewById(R.id.item_is_purchased);
         is_purchased_checkbox_linearlayout=form_view.findViewById(R.id.item_is_purchased_layout);
-        item_category.setAdapter(item_category_adapter);
+//        item_category.setAdapter(item_category_adapter);
         share_image=form_view.findViewById(R.id.share_item);
-        location_btn=form_view.findViewById(R.id.location_btn);
+
         dbContext=new DBContext(Property_Form_Fragment.this.getActivity());
 
 
 
 
-
+        choose_location_btn=form_view.findViewById(R.id.choose_location_btn);
         save_btn=form_view.findViewById(R.id.save_btn);
         delete_btn=form_view.findViewById(R.id.delete_btn);
 
         if(current_mode=="add_mode"){
-
+            //getCurrentLocationForLocationPicker();
             save_btn.setText("Add");
             save_btn.setWidth(500);
             delete_btn.setVisibility(View.GONE);
             is_purchased_checkbox.setVisibility(View.GONE);
             is_purchased_checkbox_linearlayout.setMinimumHeight(0);
             is_purchased_checkbox_linearlayout.setVisibility(View.GONE);
+
         }
         if(current_mode=="detail_mode"){
 
@@ -201,7 +303,7 @@ public class Property_Form_Fragment extends Fragment {
             item_list=dbContext.read_item_by_item_id(passed_item_id);
             ItemModel i=item_list.get(0);
             String selected_item_name=i.getItem_name();
-            String selected_item_category=i.getCategory();
+
             String selected_item_price=i.getPrice();
             String selected_image_data=i.getImage_data();
             String selected_item_description=i.getDescription();
@@ -216,19 +318,36 @@ public class Property_Form_Fragment extends Fragment {
                 Log.d("CheckboxState", "Checkbox set to false");
             }
             image_base64_string=selected_image_data;
+
             item_image.setImageBitmap(convertBase64ToBitmap(selected_image_data));
 
+
+
             item_name.setText(selected_item_name);
-            item_category.setSelection(item_category_adapter.getPosition(selected_item_category));
+
             price.setText(selected_item_price);
             description.setText(selected_item_description);
 
+            current_latitude=i.getLatitude();
+            current_longitude=i.getLongitude();
+
         }
 
-        location_btn.setOnClickListener(new View.OnClickListener() {
+
+
+
+
+
+        choose_location_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mapActivityResultLauncher.launch(null);
+//                double latitude= Float.valueOf(current_latitude);
+//                double longitude= Float.valueOf(current_longitude);
+//                openChooseMapFragment(latitude,longitude);
+                Intent intent = new Intent(Property_Form_Fragment.this.getActivity(), MapActivity.class);
+                intent.putExtra("latitude",current_latitude);
+                intent.putExtra("longitude",current_longitude);
+                mapActivityResultLauncher.launch(intent);
             }
         });
 
@@ -246,6 +365,7 @@ public class Property_Form_Fragment extends Fragment {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if (isChecked) {
                     // Checkbox is checked
+                    // Checkbox is checked
                     is_purchased=1;
                     Toast.makeText(buttonView.getContext(), "Item is marked as purchased", Toast.LENGTH_SHORT).show();
                 } else {
@@ -261,55 +381,14 @@ public class Property_Form_Fragment extends Fragment {
         save_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-            if(current_mode=="add_mode"){
-                String it_name=item_name.getText().toString();
-                String category=item_category.getSelectedItem().toString();
-                String pr=price.getText().toString();
-                String desc=description.getText().toString();
-                String message2=image_base64_string;
-                String message="item name:"+it_name+"\n"+
-                        "item name:"+category+"\n"+
-                        "item name:"+pr+"\n"+
-                        "item name:"+desc+"\n";
-                AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-                builder.setMessage(message2);
-                AlertDialog alertDialog = builder.create();
-//                alertDialog.show();
-                if( category.isEmpty() ||  pr.isEmpty() ||  it_name.isEmpty())
-                {
-                    Toast.makeText(Property_Form_Fragment.this.getActivity(), "Enter all data", Toast.LENGTH_SHORT).show();
-                }
-                else {
-                       if(dbContext.addItem(user_id,image_base64_string,it_name,pr,category,desc)) {
-                           Toast.makeText(Property_Form_Fragment.this.getActivity(), "New item added successfully", Toast.LENGTH_SHORT).show();
-                       }
-                       else{
-                           Toast.makeText(Property_Form_Fragment.this.getActivity(), "Item Creation Fail!", Toast.LENGTH_SHORT).show();
-                       }
+//                if(current_mode=="add_mode"){
+//                    getCurrentLocation();
+//                }
+//                if(current_mode=="detail_mode"){
+//                    addData();
+//                }
 
-//                    FragmentManager fragmentManager= getActivity().getSupportFragmentManager();
-//                    fragmentManager.popBackStack();
-                }
-            }
-            if(current_mode=="detail_mode"){
-
-                String current_item_name=item_name.getText().toString();
-                String current_price=price.getText().toString();
-                String current_description=description.getText().toString();
-                String current_category=item_category.getSelectedItem().toString();
-                String current_image_data=image_base64_string;
-                int current_is_purchased=is_purchased;
-                Log.d("is purchase", String.valueOf(current_is_purchased));
-                if(dbContext.updateItem(passed_item_id,current_image_data,current_item_name,current_price,current_category,current_description,current_is_purchased)) {
-                    Toast.makeText(Property_Form_Fragment.this.getActivity(), "Item updated successfully", Toast.LENGTH_SHORT).show();
-                }
-                else{
-                    Toast.makeText(Property_Form_Fragment.this.getActivity(), "Updating item fail!", Toast.LENGTH_SHORT).show();
-                }
-
-//                FragmentManager fragmentManager= getActivity().getSupportFragmentManager();
-//                fragmentManager.popBackStack();
-            }
+            addData();
             }
         });
 
@@ -344,9 +423,14 @@ public class Property_Form_Fragment extends Fragment {
             @Override
             public void onClick(View view) {
                 // Create an intent to pick an image
-                Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                Intent galleryIntent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                // Create an array of intents to choose from
+                Intent chooserIntent = Intent.createChooser(galleryIntent, "Select Picture");
+                chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, new Intent[]{cameraIntent});
                 // Launch the intent using the ActivityResultLauncher
-                selectPictureLauncher.launch(Intent.createChooser(intent, "Select Picture"));
+                selectPictureLauncher.launch(chooserIntent);
+
             }
         });
 
@@ -389,15 +473,17 @@ public class Property_Form_Fragment extends Fragment {
                     public void onClick(DialogInterface dialog, int which) {
                         EditText editTextPhoneNumber = dialogView.findViewById(R.id.share_phone);
                         String targetPhoneNumber = editTextPhoneNumber.getText().toString();
-
+                        String item_location=generateLocationUrl(current_latitude,current_longitude);
                         if (!targetPhoneNumber.isEmpty()) {
                             // Replace with actual item data
-                            String itemData = "Item name:"+item_name+"\n"+
-                                              "Item category:"+item_name+"\n"+
-                                              "Item price:"+item_name+"\n"+
-                                              "Item description:"+item_name+"\n";
+                            String itemData = "Item name:"+item_name.getText()+"\n"+
+                                              "Item price:"+price.getText()+"\n"+
+                                              "Item description:"+description.getText()+"\n"+
+                                              "Item location:"+item_location+"\n";
                             Log.d("Target Phone:", targetPhoneNumber);
+                            sms_service=new SMSHelper(Property_Form_Fragment.this.getContext());
                             sms_service.sendSms(targetPhoneNumber,itemData);
+
                         } else {
                             Toast.makeText(getActivity(), "Phone number cannot be empty", Toast.LENGTH_SHORT).show();
                         }
@@ -413,6 +499,126 @@ public class Property_Form_Fragment extends Fragment {
         // Show the dialog
         builder.create().show();
     }
+
+    private void getCurrentLocation(){
+        locationHandlerWithMapBox = new LocationHandlerWithMapBox(Property_Form_Fragment.this.getActivity());
+        locationHandlerWithMapBox.setLocationCallback(new LocationHandlerWithMapBox.LocationCallback() {
+            @Override
+            public void onLocationResult(Location location) {
+                current_latitude = String.valueOf(location.getLatitude());
+                 current_longitude = String.valueOf(location.getLongitude());
+               // Toast.makeText(Property_Form_Fragment.this.getActivity(), "Current location: " + current_latitude + ", " + current_longitude, Toast.LENGTH_LONG).show();
+               // Log.d("Image data", "Current location: " + current_latitude + ", " + current_longitude);
+                locationHandlerWithMapBox.removeLocationUpdates();
+                addData();
+            }
+
+            @Override
+            public void onLocationError(Exception exception) {
+                Toast.makeText(Property_Form_Fragment.this.getActivity(), "Error getting location: " + exception.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
+    private void getCurrentLocationForLocationPicker(){
+        locationHandlerWithMapBox = new LocationHandlerWithMapBox(Property_Form_Fragment.this.getActivity());
+        locationHandlerWithMapBox.setLocationCallback(new LocationHandlerWithMapBox.LocationCallback() {
+            @Override
+            public void onLocationResult(Location location) {
+                current_latitude = String.valueOf(location.getLatitude());
+                current_longitude = String.valueOf(location.getLongitude());
+
+                locationHandlerWithMapBox.removeLocationUpdates();
+
+            }
+
+            @Override
+            public void onLocationError(Exception exception) {
+                Toast.makeText(Property_Form_Fragment.this.getActivity(), "Error getting location: " + exception.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
+    private void addData(){
+        if(current_mode=="add_mode"){
+            String it_name=item_name.getText().toString();
+
+            String pr=price.getText().toString();
+            String desc=description.getText().toString();
+//            Toast.makeText(Property_Form_Fragment.this.getActivity(), "added location: " + current_latitude + ", " + current_longitude, Toast.LENGTH_LONG).show();
+            if(  pr.isEmpty() ||  it_name.isEmpty() || image_base64_string.isEmpty())
+            {
+                Toast.makeText(Property_Form_Fragment.this.getActivity(), "Enter all data", Toast.LENGTH_SHORT).show();
+            }
+            else {
+                if(dbContext.addItem(user_id,image_base64_string,it_name,pr,desc,current_latitude,current_longitude)) {
+                    item_name.setText("");
+                    price.setText("");
+                    description.setText("");
+                    item_image.setImageResource(R.drawable.ic_menu_gallery);
+
+                    Toast.makeText(Property_Form_Fragment.this.getActivity(), "New item added successfully", Toast.LENGTH_SHORT).show();
+                }
+                else{
+                    Toast.makeText(Property_Form_Fragment.this.getActivity(), "Item Creation Fail!", Toast.LENGTH_SHORT).show();
+                }
+
+//                    FragmentManager fragmentManager= getActivity().getSupportFragmentManager();
+//                    fragmentManager.popBackStack();
+            }
+        }
+        if(current_mode=="detail_mode"){
+
+            String current_item_name=item_name.getText().toString();
+            String current_price=price.getText().toString();
+            String current_description=description.getText().toString();
+
+            String current_image_data=image_base64_string;
+            int current_is_purchased=is_purchased;
+            Log.d("Image data", current_image_data);
+            if(dbContext.updateItem(passed_item_id,current_image_data,current_item_name,current_price,current_description,current_is_purchased,current_latitude,current_longitude)) {
+                Toast.makeText(Property_Form_Fragment.this.getActivity(), "Item updated successfully", Toast.LENGTH_SHORT).show();
+            }
+            else{
+                Toast.makeText(Property_Form_Fragment.this.getActivity(), "Updating item fail!", Toast.LENGTH_SHORT).show();
+            }
+
+//                FragmentManager fragmentManager= getActivity().getSupportFragmentManager();
+//                fragmentManager.popBackStack();
+        }
+    }
+    public String bitmapToBase64(Bitmap bitmap){
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream);
+        byte[] byteArray = byteArrayOutputStream.toByteArray();
+        return Base64.encodeToString(byteArray, Base64.DEFAULT);
+    }
+    private void openMapFragment(double latitude, double longitude) {
+        FragmentTransaction transaction = getActivity().getSupportFragmentManager().beginTransaction();
+        MapboxFragment mapboxFragment = MapboxFragment.newInstance(latitude, longitude);
+        transaction.replace(R.id.fragment_container, mapboxFragment);
+        transaction.addToBackStack(null);
+        transaction.commit();
+    }
+
+    public String generateLocationUrl(String latitude, String longitude) {
+        try {
+
+            if( latitude !=null  && latitude != null){
+
+                String url = "https://www.google.com/maps?q=" + URLEncoder.encode(Float.valueOf(latitude) + "," + Float.valueOf(longitude), "UTF-8");
+                return url;
+            }
+            else{
+                return "";
+            }
+
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
 
 
 }

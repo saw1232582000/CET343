@@ -12,7 +12,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="BUC Rental Application"
+        android:text="Baby Buy"
         android:textAlignment="center"
         android:textColor="@color/white"
         android:textSize="20dp"
@@ -21,7 +21,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="contact@BUC.com"
+        android:text="contact@BabyBuy.com"
         android:textColor="@color/white"
         android:textSize="14sp"
         android:layout_marginBottom="16dp"/>

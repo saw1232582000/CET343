@@ -3,58 +3,41 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+
     tools:context="UI.Home_Fragment"
     android:layout_gravity="center"
     android:orientation="vertical"
+
     android:gravity="center">
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textAlignment="center"
-        android:text="Welcome"
+        android:text="Welcome To"
         android:textStyle="bold"
+        android:textColor="#3356FF"
+        android:textSize="50dp">
+
+    </TextView>
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textAlignment="center"
+        android:text="Baby Buy"
+        android:textStyle="bold"
+        android:textColor="#3356FF"
         android:textSize="50dp">
 
     </TextView>
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:orientation="horizontal">
-        <View
-            android:layout_width="100dp"
-            android:layout_height="100dp"
-            android:layout_margin="5dp"
-            android:background="@drawable/custom_card_view_design_email">
-        </View>
-        <View
-            android:layout_width="100dp"
-            android:layout_height="100dp"
-            android:layout_margin="5dp"
-            android:background="@drawable/custom_card_view_design_website">
-        </View>
-    </LinearLayout>
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:orientation="horizontal">
-        <View
-            android:layout_width="100dp"
-            android:layout_height="100dp"
-            android:layout_margin="5dp"
-            android:background="@drawable/custom_card_view_design_phone">
-        </View>
-        <View
-            android:layout_width="100dp"
-            android:layout_height="100dp"
-            android:layout_margin="5dp"
-            android:background="@drawable/custom_cardview_design_balance">
-        </View>
-    </LinearLayout>
+    <ImageView
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:layout_marginTop="20dp"
+        android:src="@drawable/baseline_local_grocery_store_24"
+    />
+
 
 
 </LinearLayout>
