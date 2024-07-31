@@ -73,6 +73,7 @@ public class Location_Picker_Fragment extends Fragment {
         if (getArguments() != null) {
             current_latitude = getArguments().getDouble(ARG_LATITUDE);
             current_longitude = getArguments().getDouble(ARG_LONGITUDE);
+            selectedLocation=new LatLng(current_latitude,current_longitude);
         }
     }
 
@@ -139,6 +140,7 @@ public class Location_Picker_Fragment extends Fragment {
                     getActivity().setResult(Activity.RESULT_OK, intent);
                     getActivity().finish();
                 }
+
             }
         });
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
